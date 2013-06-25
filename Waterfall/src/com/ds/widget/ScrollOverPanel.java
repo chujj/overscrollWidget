@@ -19,7 +19,7 @@ import android.widget.Scroller;
 public class ScrollOverPanel extends View {
 	private final static int LONG_CLICK_TICK = 600;
 	private static final String BOTTOM_PROMT = "on Bottom";
-	private static final String TOP_PROMT = "on Bottom";
+	private static final String TOP_PROMT = "on Top";
 	private static final float UI_OVER_PERCENT = 0.3f;
 	
 	private static enum TouchState {
@@ -31,6 +31,15 @@ public class ScrollOverPanel extends View {
 	private TouchState mTouchState = TouchState.REST;
 	private int mLastY;
 	
+	@Override
+	protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+		int width = MeasureSpec.getSize(widthMeasureSpec);
+		int height = MeasureSpec.getSize(heightMeasureSpec);
+		
+		height = mModel.getTotalHeight() > height ? mModel.getTotalHeight() : height;
+		this.setMeasuredDimension(width, height);
+	}
+
 	private int mCurrOffsetY;
 	
 	private VelocityTracker mVelocityTracker;
@@ -38,7 +47,7 @@ public class ScrollOverPanel extends View {
 	private boolean mSkipTouch = false;
 	private MotionEvent mTouchEvent;
 	private LongClickHandler mLongClickHandler;
-	private IBdDownloadModel mModel;
+	private IModel mModel;
 	private int mDownIdx;
 	private int mTouchSlop;
 	
@@ -67,8 +76,8 @@ public class ScrollOverPanel extends View {
 
 	@Override
 	protected void dispatchDraw(Canvas canvas) {
+		drawSelf(canvas);
 		//		BdLog.e("-----------------------------------------------");
-
 		myDispatchDraw(canvas, 0, this.getMeasuredHeight(), this.getMeasuredHeight());
 
 		//		BdLog.e(" " + mTouchState + " " + this.mScroller.isFinished() + " " + mCurrOffset_Y);
@@ -84,8 +93,12 @@ public class ScrollOverPanel extends View {
 		}
 	}
 
+	private void drawSelf(Canvas canvas) {
+
+	}
+
 	private void myDispatchDraw(Canvas canvas, int aStart, int aEnd, int aHeight) {
-		IBdDownloadModel.IBdDownloadModelItem[] lists = mModel.getItemLists();
+		IModelItem[] lists = mModel.getItemLists();
 		int start_y, end_y = 0;
 		int single_height = mModel.getSingleHeight();
 
@@ -137,14 +150,14 @@ public class ScrollOverPanel extends View {
 			//				BdLog.e("" + y);
 			if (y > 0) {
 				// TODO: pick one item to selected
-//				mDownIdx = pointerFallInWhichItem(y);
-//				int offset_x, offset_y;
-//				offset_x = (int) mTouchEvent.getX();
-//				int single_height = mModel.getSingleHeight();
-//				offset_y = (y + (-mCurrOffsetY)) % single_height;
-//				//					BdLog.e(offset_x + " " + offset_y);
-//				mModel.getItemLists()[mDownIdx].keydown(offset_x, offset_y);
-//				mLongClickHandler.sendEmptyMessageDelayed(LONG_CLICK, LONG_CLICK_TICK);
+				mDownIdx = pointerFallInWhichItem(y);
+				int offset_x, offset_y;
+				offset_x = (int) mTouchEvent.getX();
+				int single_height = mModel.getSingleHeight();
+				offset_y = (y + (-mCurrOffsetY)) % single_height;
+				//					BdLog.e(offset_x + " " + offset_y);
+				mModel.getItemLists()[mDownIdx].keydown(offset_x, offset_y);
+				mLongClickHandler.sendEmptyMessageDelayed(LONG_CLICK, LONG_CLICK_TICK);
 				this.invalidate();
 			} else {
 				// touchEvent down < 0 
@@ -188,6 +201,10 @@ public class ScrollOverPanel extends View {
 		default:
 			break;
 		}
+	}
+
+	private int pointerFallInWhichItem(int y) {
+		return 0;
 	}
 
 	private float spacing(MotionEvent e1, MotionEvent e2) {
@@ -277,30 +294,25 @@ public class ScrollOverPanel extends View {
 		}
 	}
 
-//	public interface IBdDownloadModelItem {
-//		public void drawSelf(Canvas aCanvas, int aStart, int aEnd, int aTotalWidth);
-//		public void keydown(int aOffsetX, int aOffsetY);
-//		public void keyUpCancel();
-//		public void onClick();
-//		public boolean onLongClick();
-//	}
+	public interface IModel {
+		public IModelItem[] getItemLists();
+		public int getSingleHeight();
+		public void reloadData();
+
+		public int getTotalHeight();
+		public IModelItem[] getVisiableItems(int aFromY, int aToY);
+		public IModelItem hitWhichItem(int aY);
+		public void onOverTop();
+		public void onOverBottom();
+		public void onRegionRelease(int aFromY, int aToY);
+	}
 	
-	public abstract class IBdDownloadModel {
-
-		public abstract IBdDownloadModelItem[] getItemLists();
-
-		public abstract int getSingleHeight();
-
-		public abstract void reloadData();
-
-		public abstract class IBdDownloadModelItem {
-			public abstract void drawSelf(Canvas aCanvas, int aStart, int aEnd, int aTotalWidth);
-			public abstract void keydown(int aOffsetX, int aOffsetY);
-			public abstract void keyUpCancel();
-			public abstract void onClick();
-			public abstract boolean onLongClick();
-		}
-
+	public interface IModelItem {
+		public void drawSelf(Canvas aCanvas, int aStart, int aEnd, int aTotalWidth);
+		public void keydown(int aOffsetX, int aOffsetY);
+		public void keyUpCancel();
+		public void onClick();
+		public boolean onLongClick();
 	}
 
 }
