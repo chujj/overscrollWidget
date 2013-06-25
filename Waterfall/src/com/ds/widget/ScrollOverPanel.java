@@ -2,8 +2,11 @@ package com.ds.widget;
 
 import android.app.Service;
 import android.content.Context;
+import android.content.res.Configuration;
 import android.graphics.Canvas;
+import android.graphics.Rect;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.Message;
 import android.os.SystemClock;
 import android.os.Vibrator;
@@ -49,7 +52,69 @@ public class ScrollOverPanel extends View {
 		mScroller = new Scroller(context);
 	}
 
-	
+	@Override
+	protected void onConfigurationChanged(Configuration newConfig) {
+		super.onConfigurationChanged(newConfig);
+		new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+
+			@Override
+			public void run() {
+				checkLimit();
+				ScrollOverPanel.this.invalidate();
+			}
+		}, 500);
+	}
+
+	@Override
+	protected void dispatchDraw(Canvas canvas) {
+		//		BdLog.e("-----------------------------------------------");
+
+		myDispatchDraw(canvas, 0, this.getMeasuredHeight(), this.getMeasuredHeight());
+
+		//		BdLog.e(" " + mTouchState + " " + this.mScroller.isFinished() + " " + mCurrOffset_Y);
+		if (mTouchState == TouchState.AUTO && mScroller.computeScrollOffset()) {
+			mCurrOffsetY = mScroller.getCurrY();
+			//			BdLog.e(" " + mCurrOffset_Y);
+			this.checkLimit();
+			this.invalidate();
+		}
+
+		if (mTouchState == TouchState.AUTO && this.mScroller.isFinished()) {
+			mTouchState = TouchState.REST;
+		}
+	}
+
+	private void myDispatchDraw(Canvas canvas, int aStart, int aEnd, int aHeight) {
+		IBdDownloadModel.IBdDownloadModelItem[] lists = mModel.getItemLists();
+		int start_y, end_y = 0;
+		int single_height = mModel.getSingleHeight();
+
+		int from = -mCurrOffsetY;
+		int to = -mCurrOffsetY + (aHeight);
+		//				BdLog.e(from + " " + to);
+		from = from / single_height;
+		to = to / single_height + 1; // +1? , don't know why
+		//				BdLog.e(from + " " + to + " " + lists.length);
+		from = Math.max(from, 0);
+		to = Math.min(to, lists.length);
+		//				BdLog.e(from + " " + to);
+
+		for (int i = from; i < to; i++) { // give me a better algorithem
+			start_y = aStart + mCurrOffsetY + (i * single_height);
+			end_y = start_y + single_height;
+			if (end_y < aStart || start_y > aEnd)
+				continue;
+
+			Rect rect = canvas.getClipBounds();
+			rect.top = start_y;
+			rect.bottom = end_y;
+			canvas.save();
+			canvas.clipRect(rect);
+			lists[i].drawSelf(canvas, start_y, end_y, this.getMeasuredWidth());
+			canvas.restore();
+		}
+	}
+
 	@Override
 	public boolean dispatchTouchEvent(MotionEvent ev) {
 		//		BdLog.e(ev.getAction() + " ");
