@@ -1,0 +1,241 @@
+package com.ds.widget;
+
+import android.app.Service;
+import android.content.Context;
+import android.graphics.Canvas;
+import android.os.Handler;
+import android.os.Message;
+import android.os.SystemClock;
+import android.os.Vibrator;
+import android.view.MotionEvent;
+import android.view.VelocityTracker;
+import android.view.View;
+import android.view.ViewConfiguration;
+import android.widget.Scroller;
+
+public class ScrollOverPanel extends View {
+	private final static int LONG_CLICK_TICK = 600;
+	private static final String BOTTOM_PROMT = "on Bottom";
+	private static final String TOP_PROMT = "on Bottom";
+	private static final float UI_OVER_PERCENT = 0.3f;
+	
+	private static enum TouchState {
+		REST,
+		SCROLLING,
+		AUTO
+	};
+
+	private TouchState mTouchState = TouchState.REST;
+	private int mLastY;
+	
+	private int mCurrOffsetY;
+	
+	private VelocityTracker mVelocityTracker;
+	private Scroller mScroller;
+	private boolean mSkipTouch = false;
+	private MotionEvent mTouchEvent;
+	private LongClickHandler mLongClickHandler;
+	private IBdDownloadModel mModel;
+	private int mDownIdx;
+	private int mTouchSlop;
+	
+	public ScrollOverPanel(Context context) {
+		super(context);
+		
+		mCurrOffsetY = 0;
+		mVelocityTracker = VelocityTracker.obtain();
+		mLongClickHandler = new LongClickHandler();
+		mTouchSlop = ViewConfiguration.get(context).getScaledTouchSlop();
+		mScroller = new Scroller(context);
+	}
+
+	
+	@Override
+	public boolean dispatchTouchEvent(MotionEvent ev) {
+		//		BdLog.e(ev.getAction() + " ");
+		mVelocityTracker.addMovement(ev);
+
+		if (!mSkipTouch)
+			analysisTouchEvent(ev);
+
+		analysisScrollEvent(ev);
+		return true;
+	}
+
+
+	private void analysisTouchEvent(MotionEvent ev) {
+		switch (ev.getAction()) {
+		case MotionEvent.ACTION_DOWN:
+			mTouchEvent = MotionEvent.obtain(ev);
+
+			int y = (int) mTouchEvent.getY();
+			//				BdLog.e("" + y);
+			if (y > 0) {
+				// TODO: pick one item to selected
+//				mDownIdx = pointerFallInWhichItem(y);
+//				int offset_x, offset_y;
+//				offset_x = (int) mTouchEvent.getX();
+//				int single_height = mModel.getSingleHeight();
+//				offset_y = (y + (-mCurrOffsetY)) % single_height;
+//				//					BdLog.e(offset_x + " " + offset_y);
+//				mModel.getItemLists()[mDownIdx].keydown(offset_x, offset_y);
+//				mLongClickHandler.sendEmptyMessageDelayed(LONG_CLICK, LONG_CLICK_TICK);
+				this.invalidate();
+			} else {
+				// touchEvent down < 0 
+				Math.abs(1 / 0);
+			}
+			break;
+		case MotionEvent.ACTION_MOVE:
+			float dis = spacing(ev, mTouchEvent);
+			if (dis > mTouchSlop) {
+				mLongClickHandler.removeMessages(LONG_CLICK);
+				mSkipTouch = true;
+				mTouchEvent = null;
+				if (mModel.getItemLists().length > 0) {
+					mModel.getItemLists()[mDownIdx].keyUpCancel();
+				}
+			} else {
+				mLongClickHandler.sendEmptyMessageDelayed(LONG_CLICK, LONG_CLICK_TICK);
+				long diff = SystemClock.uptimeMillis() - mTouchEvent.getEventTime();
+				//					BdLog.e(dis + " hold: " + diff);
+				if (diff > (LONG_CLICK_TICK - 100)) {
+					perforeLongClick();
+				}
+			}
+			break;
+		case MotionEvent.ACTION_UP:
+			mLongClickHandler.removeMessages(LONG_CLICK);
+			int yu = (int) mTouchEvent.getY();
+			if (yu < 0) {
+				Math.abs( 1 / 0);
+//				mTitlebar.unSelect();
+//				mTitlebar.onClick(ev);
+			} else {
+				//					BdLog.e("" + mDownIdx);
+				mModel.getItemLists()[mDownIdx].onClick();
+				this.invalidate();
+			}
+			break;
+		case MotionEvent.ACTION_CANCEL:
+			mLongClickHandler.removeMessages(LONG_CLICK);
+			break;
+		default:
+			break;
+		}
+	}
+
+	private float spacing(MotionEvent e1, MotionEvent e2) {
+		float x = e1.getX(0) - e2.getX(0);
+		float y = e1.getY(0) - e2.getY(0);
+		return (float) Math.sqrt(x * x + y * y);
+	}
+
+	private void analysisScrollEvent(MotionEvent ev) {
+		//		BdLog.e("" + mCurrOffset_Y);
+		switch (ev.getAction()) {
+		case MotionEvent.ACTION_DOWN:
+			mLastY = (int) ev.getY();
+			this.mTouchState = TouchState.REST;
+			mScroller.forceFinished(true);
+			break;
+		case MotionEvent.ACTION_MOVE:
+			int y = (int) ev.getY();
+			mCurrOffsetY += (y - mLastY);
+			checkLimit();
+			this.invalidate();
+			mLastY = y;
+			break;
+
+		case MotionEvent.ACTION_CANCEL:
+			this.reset();
+			break;
+		case MotionEvent.ACTION_UP:
+			mVelocityTracker.computeCurrentVelocity(1000);
+			final int y_spd = (int) mVelocityTracker.getYVelocity();
+			final int abs_y_spd = Math.abs(y_spd);
+			int dd = (abs_y_spd & 0xffffff00) > 0 ? (abs_y_spd - 255) : 0;
+			this.reset();
+			mScroller.startScroll(0, this.mCurrOffsetY, 0, (y_spd > 0 ? dd : -dd), abs_y_spd);
+			//				BdLog.e("" +  this.mCurrOffsetY + " 	" + y_spd + " " + dd);
+			mTouchState = TouchState.AUTO;
+			this.invalidate();
+			break;
+
+		default:
+			break;
+		}
+	}
+	private void checkLimit() {
+		int temp = mCurrOffsetY;
+		// FIXME: zhujj: getHeight() ?, give me sth defined
+		int max = mModel.getItemLists().length * mModel.getSingleHeight()
+				- this.getHeight();
+		int slop = 0;
+		mCurrOffsetY = temp > slop ? slop : temp < -(max + slop) ? -(max + slop) : temp;
+//		BdLog.e(temp + " " + max + " " + mCurrOffset_Y);
+	}
+
+	private void perforeLongClick() {
+		mLongClickHandler.removeMessages(LONG_CLICK);
+		if ((int) mTouchEvent.getY() > 0) {
+			if (mModel.getItemLists()[mDownIdx].onLongClick()) {
+				mSkipTouch = true;
+				mTouchEvent = null;
+				this.invalidate();
+				vibrator();
+			}
+		}
+	}
+
+	private void vibrator() {
+		Vibrator vib = (Vibrator) this.getContext().getSystemService(Service.VIBRATOR_SERVICE);
+		vib.vibrate(50); // SUPPRESS CHECKSTYLE
+	}
+	
+	private void reset() {
+		mVelocityTracker.clear();
+		mTouchState = TouchState.REST;
+		mSkipTouch = false;
+	}
+
+	private static final int LONG_CLICK = 1;
+	private class LongClickHandler extends Handler {
+		@Override
+		public void handleMessage(Message msg) {
+			switch (msg.what) {
+			case LONG_CLICK:
+				ScrollOverPanel.this.perforeLongClick();
+				break;
+			}
+			super.handleMessage(msg);
+		}
+	}
+
+//	public interface IBdDownloadModelItem {
+//		public void drawSelf(Canvas aCanvas, int aStart, int aEnd, int aTotalWidth);
+//		public void keydown(int aOffsetX, int aOffsetY);
+//		public void keyUpCancel();
+//		public void onClick();
+//		public boolean onLongClick();
+//	}
+	
+	public abstract class IBdDownloadModel {
+
+		public abstract IBdDownloadModelItem[] getItemLists();
+
+		public abstract int getSingleHeight();
+
+		public abstract void reloadData();
+
+		public abstract class IBdDownloadModelItem {
+			public abstract void drawSelf(Canvas aCanvas, int aStart, int aEnd, int aTotalWidth);
+			public abstract void keydown(int aOffsetX, int aOffsetY);
+			public abstract void keyUpCancel();
+			public abstract void onClick();
+			public abstract boolean onLongClick();
+		}
+
+	}
+
+}
