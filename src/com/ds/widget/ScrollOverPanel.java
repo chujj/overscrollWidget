@@ -36,7 +36,7 @@ public class ScrollOverPanel extends View {
 		int width = MeasureSpec.getSize(widthMeasureSpec);
 		int height = MeasureSpec.getSize(heightMeasureSpec);
 		
-		height = mModel.getTotalHeight() > height ? mModel.getTotalHeight() : height;
+//		height = mModel.getTotalHeight() > height ? mModel.getTotalHeight() : height;
 		this.setMeasuredDimension(width, height);
 	}
 
@@ -52,8 +52,13 @@ public class ScrollOverPanel extends View {
 	private int mTouchSlop;
 	
 	public ScrollOverPanel(Context context) {
+		this(context, null);
+	}
+	
+	public ScrollOverPanel(Context context, IModel aModel) {
 		super(context);
 		
+		mModel = aModel;
 		mCurrOffsetY = 0;
 		mVelocityTracker = VelocityTracker.obtain();
 		mLongClickHandler = new LongClickHandler();
@@ -77,6 +82,10 @@ public class ScrollOverPanel extends View {
 	@Override
 	protected void dispatchDraw(Canvas canvas) {
 		drawSelf(canvas);
+		
+		if (mModel == null) {
+			return;
+		}
 		//		BdLog.e("-----------------------------------------------");
 		myDispatchDraw(canvas, 0, this.getMeasuredHeight(), this.getMeasuredHeight());
 
@@ -94,7 +103,7 @@ public class ScrollOverPanel extends View {
 	}
 
 	private void drawSelf(Canvas canvas) {
-
+		canvas.drawColor(0xff880000);
 	}
 
 	private void myDispatchDraw(Canvas canvas, int aStart, int aEnd, int aHeight) {
@@ -132,6 +141,10 @@ public class ScrollOverPanel extends View {
 	public boolean dispatchTouchEvent(MotionEvent ev) {
 		//		BdLog.e(ev.getAction() + " ");
 		mVelocityTracker.addMovement(ev);
+		
+		if (mModel == null) {
+			return true;
+		}
 
 		if (!mSkipTouch)
 			analysisTouchEvent(ev);
