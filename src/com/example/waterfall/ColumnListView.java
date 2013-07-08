@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.ColorFilter;
 import android.graphics.drawable.Drawable;
+import android.util.Log;
 
 import com.ds.widget.ScrollOverPanel.IModel;
 import com.ds.widget.ScrollOverPanel.IModelItem;
@@ -15,20 +16,59 @@ public class ColumnListView implements IModel {
 	
 	private ItemDrawable[] mItems;
 
-	public ColumnListView(Context context) {
+	public ColumnListView(Context context, int aWidth) {
 		int size = BITMAPS.length;
 		mItems = new ItemDrawable[size];
 		for (int i = 0; i < size; i++) {
 			mItems[i] = new ItemDrawable(context, BITMAPS[i]);
 		}
+		
+		layout(aWidth);
+	}
+
+	private void layout(int aTotalWidth) {
+		int l, t, r, b, tmp;
+		int[] columns_height = new int[UI_COLUMNT];
+		
+		for (int i = 0; i < columns_height.length; i++) {// reset
+			columns_height[i] = 0;
+		}
+		
+		final int singleWidth = (int) (aTotalWidth * 1.0 / UI_COLUMNT);
+		
+		for (int i = 0; i < mItems.length; i++) {
+			tmp = mItems[i].getHeightScaleWidth(singleWidth);
+			int[] bundle = getMinColumnHeightIdx(columns_height);
+			
+			l = bundle[0] * singleWidth;
+			r = l + singleWidth;
+			t = bundle[1];
+			b = t + tmp;
+			mItems[i].setBounds(l, t, r, b); // update DrawableItem
+			
+			columns_height[bundle[0]] = b;  // update culumnt_height
+		}
+		dumpAllItems();
 	}
 	
+	private void dumpAllItems() {
+		for (int i = 0; i < mItems.length; i++) {
+			Log.e("zhujj" , mItems[i].toString());
+		}
+	}
 	
-	private void layout(int aTotalWidth) {
-		int l, t, r, b;
-		int[] columns_height = new int[UI_COLUMNT];
-		int singleWidth = (int) (aTotalWidth * 1.0 / UI_COLUMNT);
+	private int[] getMinColumnHeightIdx(int[] aColumns) {
+		int idx, min;
+		idx = 0;
+		min = aColumns[0];
+		for (int i = 1; i < aColumns.length; i++) {
+			if (aColumns[i] < min) {
+				idx = i;
+				min = aColumns[i];
+			}
+		}
 		
+		return new int[] {idx, min};
 	}
 	
 	@Override
@@ -99,6 +139,11 @@ public class ColumnListView implements IModel {
 			mLeftMargin = mTopMargin = mRightMargin = mBottomMargin = aBorderMargin;
 		}
 		
+		public int getHeightScaleWidth(int aWidth) {
+			double scaleFactor = aWidth * 1.0 / mWidth;
+			return (int) (mHeight * scaleFactor);
+		}
+		
 		@Override
 		public void setBounds(int left, int top, int right, int bottom) {
 			mLeft = left;
@@ -159,6 +204,11 @@ public class ColumnListView implements IModel {
 		public void setColorFilter(ColorFilter cf) {
 			// TODO Auto-generated method stub
 			
+		}
+
+		@Override
+		public String toString() {
+			return mLeft + " " + mTop + " - " + mRight + " " + mBottom;
 		}
 		
 	}
