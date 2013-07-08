@@ -13,7 +13,7 @@ import com.ds.widget.ScrollOverPanel.IModel;
 import com.ds.widget.ScrollOverPanel.IModelItem;
 
 public class ColumnListView implements IModel {
-	public static final int UI_COLUMNT = 2;
+	public static final int UI_COLUMNT = 3;
 	
 	private ItemDrawable[] mItems;
 
@@ -140,6 +140,7 @@ public class ColumnListView implements IModel {
 			mHeight = mBitmap.getHeight();
 			mWidth = mBitmap.getWidth();
 			mRect = new Rect();
+			setMargin(0);
 		}
 
 		public void setMargin(int aBorderMargin) {
@@ -157,12 +158,13 @@ public class ColumnListView implements IModel {
 			mTop = top; 
 			mRight = right;
 			mBottom = bottom;
-			mRect.set(left, top , right, bottom);
+			setMargin(5);
 		}
 
 		@Override
 		public void drawSelf(Canvas aCanvas, int aStart, int aEnd, int aTotalWidth, int aOffset) {
 			mRect.set(mLeft, mTop , mRight, mBottom);
+			mRect.inset(5, 5);
 			mRect.offset(0, aOffset);
 			aCanvas.drawBitmap(mBitmap, null, mRect, null);
 		}
