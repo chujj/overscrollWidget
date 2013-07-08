@@ -10,6 +10,7 @@ import android.os.Looper;
 import android.os.Message;
 import android.os.SystemClock;
 import android.os.Vibrator;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.VelocityTracker;
 import android.view.View;
@@ -36,6 +37,9 @@ public class ScrollOverPanel extends View {
 		int width = MeasureSpec.getSize(widthMeasureSpec);
 		int height = MeasureSpec.getSize(heightMeasureSpec);
 		
+		if (mModel != null) {
+			mModel.layoutVisiableItems(width, -mCurrOffsetY, height + (-mCurrOffsetY));
+		}
 //		height = mModel.getTotalHeight() > height ? mModel.getTotalHeight() : height;
 		this.setMeasuredDimension(width, height);
 	}
@@ -103,10 +107,24 @@ public class ScrollOverPanel extends View {
 	}
 
 	private void drawSelf(Canvas canvas) {
-		canvas.drawColor(0xff880000);
+		canvas.drawColor(0xffaaaaaa);
 	}
 
 	private void myDispatchDraw(Canvas canvas, int aStart, int aEnd, int aHeight) {
+		aStart += -mCurrOffsetY;
+		aEnd += -mCurrOffsetY;
+		
+		IModelItem[] lists = mModel.getVisiableItems(aStart, aEnd);
+		if(lists == null) {
+			return; 
+		}
+	
+		for (int i = 0; i < lists.length; i++) {
+			lists[i].drawSelf(canvas, aStart, aEnd, this.getMeasuredWidth(), mCurrOffsetY);
+		}
+	}
+
+	private void myDispatchDrawV2(Canvas canvas, int aStart, int aEnd, int aHeight) {
 		IModelItem[] lists = mModel.getItemLists();
 		int start_y, end_y = 0;
 		int single_height = mModel.getSingleHeight();
@@ -132,7 +150,7 @@ public class ScrollOverPanel extends View {
 			rect.bottom = end_y;
 			canvas.save();
 			canvas.clipRect(rect);
-			lists[i].drawSelf(canvas, start_y, end_y, this.getMeasuredWidth());
+			lists[i].drawSelf(canvas, start_y, end_y, this.getMeasuredWidth(), 0);
 			canvas.restore();
 		}
 	}
@@ -222,7 +240,7 @@ public class ScrollOverPanel extends View {
 	}
 
 	private void analysisScrollEvent(MotionEvent ev) {
-		//		BdLog.e("" + mCurrOffset_Y);
+//		Log.e("", "" +  mCurrOffsetY);
 		switch (ev.getAction()) {
 		case MotionEvent.ACTION_DOWN:
 			mLastY = (int) ev.getY();
@@ -312,10 +330,11 @@ public class ScrollOverPanel extends View {
 		public void onOverTop();
 		public void onOverBottom();
 		public void onRegionRelease(int aFromY, int aToY);
+		public void layoutVisiableItems(int aTotalWidth, int aFromY, int aToY);
 	}
 	
 	public interface IModelItem {
-		public void drawSelf(Canvas aCanvas, int aStart, int aEnd, int aTotalWidth);
+		public void drawSelf(Canvas aCanvas, int aStart, int aEnd, int aTotalWidth, int aOffset);
 		public void keydown(int aOffsetX, int aOffsetY);
 		public void keyUpCancel();
 		public void onClick();

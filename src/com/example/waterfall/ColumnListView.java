@@ -5,6 +5,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.ColorFilter;
+import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.util.Log;
 
@@ -16,16 +17,19 @@ public class ColumnListView implements IModel {
 	
 	private ItemDrawable[] mItems;
 
-	public ColumnListView(Context context, int aWidth) {
+	public ColumnListView(Context context) {
 		int size = BITMAPS.length;
 		mItems = new ItemDrawable[size];
 		for (int i = 0; i < size; i++) {
 			mItems[i] = new ItemDrawable(context, BITMAPS[i]);
 		}
-		
-		layout(aWidth);
 	}
 
+	@Override
+	public void layoutVisiableItems(int aTotalWidth, int aFromY, int aToY) {
+		layout(aTotalWidth);
+	}
+	
 	private void layout(int aTotalWidth) {
 		int l, t, r, b, tmp;
 		int[] columns_height = new int[UI_COLUMNT];
@@ -95,8 +99,8 @@ public class ColumnListView implements IModel {
 
 	@Override
 	public IModelItem[] getVisiableItems(int aFromY, int aToY) {
-		// TODO Auto-generated method stub
-		return null;
+		// TODO zhujj need to improve
+		return mItems;
 	}
 
 	@Override
@@ -127,12 +131,15 @@ public class ColumnListView implements IModel {
 		Bitmap mBitmap;
 		int mHeight, mWidth;
 		int mLeft, mTop, mRight, mBottom;
+		
 		int mLeftMargin, mTopMargin, mRightMargin, mBottomMargin;
+		Rect mRect;
 		
 		public ItemDrawable(Context context, int aResId) {
 			mBitmap = BitmapFactory.decodeResource(context.getResources(), aResId);
 			mHeight = mBitmap.getHeight();
 			mWidth = mBitmap.getWidth();
+			mRect = new Rect();
 		}
 
 		public void setMargin(int aBorderMargin) {
@@ -150,12 +157,14 @@ public class ColumnListView implements IModel {
 			mTop = top; 
 			mRight = right;
 			mBottom = bottom;
+			mRect.set(left, top , right, bottom);
 		}
 
 		@Override
-		public void drawSelf(Canvas aCanvas, int aStart, int aEnd, int aTotalWidth) {
-			// TODO Auto-generated method stub
-			
+		public void drawSelf(Canvas aCanvas, int aStart, int aEnd, int aTotalWidth, int aOffset) {
+			mRect.set(mLeft, mTop , mRight, mBottom);
+			mRect.offset(0, aOffset);
+			aCanvas.drawBitmap(mBitmap, null, mRect, null);
 		}
 
 		@Override
@@ -184,8 +193,8 @@ public class ColumnListView implements IModel {
 
 		@Override
 		public void draw(Canvas canvas) {
-			// TODO Auto-generated method stub
-			
+			throw new RuntimeException("don't call me");
+//			drawSelf(can, aStart, aEnd, a, 0);
 		}
 
 		@Override
