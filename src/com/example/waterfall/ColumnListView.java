@@ -60,7 +60,7 @@ public class ColumnListView implements IModel {
 	}
 
 	@Override
-	public int hitWhichItem(int aY) {
+	public int hitWhichItem(int aX, int aY) {
 		// TODO Auto-generated method stub
 		return 0;
 	}

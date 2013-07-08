@@ -166,7 +166,7 @@ public class ScrollOverPanel extends View {
 				int offset_x, offset_y;
 				offset_x = (int) mTouchEvent.getX();
 				offset_y = (y + (-mCurrOffsetY));
-				mDownIdx = mModel.hitWhichItem(offset_y);
+				mDownIdx = mModel.hitWhichItem(offset_x, offset_y);
 				//					BdLog.e(offset_x + " " + offset_y);
 				mModel.getItemLists()[mDownIdx].keydown(offset_x, offset_y);
 				mLongClickHandler.sendEmptyMessageDelayed(LONG_CLICK, LONG_CLICK_TICK);
@@ -308,7 +308,7 @@ public class ScrollOverPanel extends View {
 
 		public int getTotalHeight();
 		public IModelItem[] getVisiableItems(int aFromY, int aToY);
-		public int hitWhichItem(int aY);
+		public int hitWhichItem(int aX, int aY);
 		public void onOverTop();
 		public void onOverBottom();
 		public void onRegionRelease(int aFromY, int aToY);
