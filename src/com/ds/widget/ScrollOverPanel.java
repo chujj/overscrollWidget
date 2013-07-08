@@ -163,18 +163,17 @@ public class ScrollOverPanel extends View {
 			//				BdLog.e("" + y);
 			if (y > 0) {
 				// TODO: pick one item to selected
-				mDownIdx = pointerFallInWhichItem(y);
 				int offset_x, offset_y;
 				offset_x = (int) mTouchEvent.getX();
-				int single_height = mModel.getSingleHeight();
-				offset_y = (y + (-mCurrOffsetY)) % single_height;
+				offset_y = (y + (-mCurrOffsetY));
+				mDownIdx = mModel.hitWhichItem(offset_y);
 				//					BdLog.e(offset_x + " " + offset_y);
 				mModel.getItemLists()[mDownIdx].keydown(offset_x, offset_y);
 				mLongClickHandler.sendEmptyMessageDelayed(LONG_CLICK, LONG_CLICK_TICK);
-				this.invalidate();
+				this.postInvalidate();
 			} else {
-				// touchEvent down < 0 
-				Math.abs(1 / 0);
+				// touchEvent down < 0
+				throw new RuntimeException("action-down y < 0");
 			}
 			break;
 		case MotionEvent.ACTION_MOVE:
@@ -199,7 +198,7 @@ public class ScrollOverPanel extends View {
 			mLongClickHandler.removeMessages(LONG_CLICK);
 			int yu = (int) mTouchEvent.getY();
 			if (yu < 0) {
-				Math.abs( 1 / 0);
+				throw new RuntimeException("action-up y < 0");
 //				mTitlebar.unSelect();
 //				mTitlebar.onClick(ev);
 			} else {
@@ -214,10 +213,6 @@ public class ScrollOverPanel extends View {
 		default:
 			break;
 		}
-	}
-
-	private int pointerFallInWhichItem(int y) {
-		return 0;
 	}
 
 	private float spacing(MotionEvent e1, MotionEvent e2) {
@@ -264,8 +259,7 @@ public class ScrollOverPanel extends View {
 	private void checkLimit() {
 		int temp = mCurrOffsetY;
 		// FIXME: zhujj: getHeight() ?, give me sth defined
-		int max = mModel.getItemLists().length * mModel.getSingleHeight()
-				- this.getHeight();
+		int max = mModel.getTotalHeight() - this.getHeight();
 		int slop = 0;
 		mCurrOffsetY = temp > slop ? slop : temp < -(max + slop) ? -(max + slop) : temp;
 //		BdLog.e(temp + " " + max + " " + mCurrOffset_Y);
@@ -314,7 +308,7 @@ public class ScrollOverPanel extends View {
 
 		public int getTotalHeight();
 		public IModelItem[] getVisiableItems(int aFromY, int aToY);
-		public IModelItem hitWhichItem(int aY);
+		public int hitWhichItem(int aY);
 		public void onOverTop();
 		public void onOverBottom();
 		public void onRegionRelease(int aFromY, int aToY);
