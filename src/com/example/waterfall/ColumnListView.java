@@ -11,6 +11,7 @@ import android.util.Log;
 
 import com.ds.widget.ScrollOverPanel.IModel;
 import com.ds.widget.ScrollOverPanel.IModelItem;
+import com.ds.widget.ScrollOverPanel.OverAction;
 
 public class ColumnListView implements IModel {
 	public static final int UI_COLUMNT = 3;
@@ -110,16 +111,16 @@ public class ColumnListView implements IModel {
 	}
 
 	@Override
-	public void onOverTop() {
-		// TODO Auto-generated method stub
+	public void onOverTop(OverAction aHandle) {
+		aHandle.done();
+
 	}
 
 	@Override
-	public void onOverBottom() {
-		// TODO Auto-generated method stub
-		
+	public void onOverBottom(OverAction aHandle) {
+		aHandle.done();
 	}
-
+	
 	@Override
 	public void onRegionRelease(int aFromY, int aToY) {
 		// TODO Auto-generated method stub
@@ -292,4 +293,5 @@ public class ColumnListView implements IModel {
 		R.drawable.land_home_icon_video,
 		R.drawable.land_home_icon_weibo,
 	};
+
 }

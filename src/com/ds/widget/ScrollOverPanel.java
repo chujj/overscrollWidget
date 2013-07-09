@@ -32,17 +32,6 @@ public class ScrollOverPanel extends View {
 
 	private TouchState mTouchState = TouchState.REST;
 	private int mLastY;
-	
-	@Override
-	protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-		int width = MeasureSpec.getSize(widthMeasureSpec);
-		int height = MeasureSpec.getSize(heightMeasureSpec);
-		
-		if (mModel != null) {
-			mModel.layoutVisiableItems(width, -mCurrOffsetY, height + (-mCurrOffsetY));
-		}
-		this.setMeasuredDimension(width, height);
-	}
 
 	private int mCurrOffsetY;
 	
@@ -54,6 +43,9 @@ public class ScrollOverPanel extends View {
 	private IModel mModel;
 	private int mDownIdx;
 	private int mTouchSlop;
+	
+	private TopActionDone mTopAction;
+	private BottomActionDone mBottomAction;
 	
 	public ScrollOverPanel(Context context) {
 		this(context, null);
@@ -68,6 +60,19 @@ public class ScrollOverPanel extends View {
 		mLongClickHandler = new LongClickHandler();
 		mTouchSlop = ViewConfiguration.get(context).getScaledTouchSlop();
 		mScroller = new Scroller(context);
+		mTopAction = new TopActionDone();
+		mBottomAction = new BottomActionDone();
+	}
+
+	@Override
+	protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+		int width = MeasureSpec.getSize(widthMeasureSpec);
+		int height = MeasureSpec.getSize(heightMeasureSpec);
+
+		if (mModel != null) {
+			mModel.layoutVisiableItems(width, -mCurrOffsetY, height + (-mCurrOffsetY));
+		}
+		this.setMeasuredDimension(width, height);
 	}
 
 	@Override
@@ -101,7 +106,6 @@ public class ScrollOverPanel extends View {
 			this.invalidate();
 		}
 
-		// last frame
 		if (mTouchState == TouchState.AUTO && this.mScroller.isFinished()) {
 			mylog("last frame");
 			mTouchState = TouchState.REST;
@@ -275,22 +279,51 @@ public class ScrollOverPanel extends View {
 
 		int min = this.getMeasuredHeight() - mModel.getTotalHeight();
 		int max = 0;
+		// call overScroll listeners
+		if (temp > max) {
+			onOverTop();
+		} else if (temp < min) {
+			onOverBottom();
+		}
+		
 		// FIXME store this value, for speed up, note the land/port condition
 		int overRange = (int) (UI_OVER_PERCENT * this.getMeasuredHeight());
 		max += overRange;
 		min -= overRange;
 		
 		// test if we try to over max range
-		boolean hitRange;
-		hitRange = temp > max ? true : temp < min ? true : false;
-				
-		// min < temp < max
-		mCurrOffsetY = temp > max ? max : temp < min ? min : temp;
+		boolean hitBufferedRangeLedge = overLimit(temp, min, max);//temp > max ? true : temp < min ? true : false;
+
+		mCurrOffsetY = getLimitedValue(temp, min, max);
 		
-		if (mTouchState == TouchState.AUTO && hitRange) { // if auto anim, stop continue scroll
+		if (mTouchState == TouchState.AUTO && hitBufferedRangeLedge) { // if auto anim, stop continue scroll
 			mylog("auto anim && hit range");
 			mScroller.forceFinished(true);
 		}
+	}
+
+	private void onOverBottom() {
+		mylog("onOverBottom");
+		if (mModel != null && !mBottomAction.isBottomAcitonProcess) {
+			mBottomAction.isBottomAcitonProcess = true;
+			mModel.onOverBottom(mBottomAction);
+		}
+	}
+
+	private void onOverTop() {
+		mylog("onOverTop");
+		if (mModel != null && !mTopAction.isTopAcitonProcess) {
+			mTopAction.isTopAcitonProcess = true;
+			mModel.onOverTop(mTopAction);
+		}
+	}
+
+	final private boolean overLimit(int aCurr, int aMin, int aMax) {
+		return aCurr > aMax ? true : aCurr < aMin ? true : false;
+	}
+	
+	final private int getLimitedValue(int aCurr, int aMin, int aMax) {
+		return aCurr > aMax ? aMax : aCurr < aMin ? aMin : aCurr;
 	}
 
 	private void perforeLongClick() {
@@ -329,6 +362,30 @@ public class ScrollOverPanel extends View {
 		}
 	}
 
+	public static class TopActionDone implements OverAction {
+		boolean isTopAcitonProcess;
+		public TopActionDone() {
+			done();
+		}
+		public void done() {
+			isTopAcitonProcess = false;
+		}
+	}
+
+	public static class BottomActionDone implements OverAction {
+		boolean isBottomAcitonProcess;
+		public BottomActionDone() {
+			done();
+		}
+		public void done() {
+			isBottomAcitonProcess = false;
+		}
+	}
+	
+	public interface OverAction {
+		public void done();
+	}
+
 	public interface IModel {
 		public IModelItem[] getItemLists();
 		public int getSingleHeight();
@@ -337,8 +394,14 @@ public class ScrollOverPanel extends View {
 		public int getTotalHeight();
 		public IModelItem[] getVisiableItems(int aFromY, int aToY);
 		public int hitWhichItem(int aX, int aY);
-		public void onOverTop();
-		public void onOverBottom();
+		/** call when draw, so return as fast as you can
+		 * @param aHandle
+		 */
+		public void onOverTop(OverAction aHandle);
+		/** call when draw, so return as fast as you can
+		 * @param aHandle
+		 */
+		public void onOverBottom(OverAction aHandle);
 		public void onRegionRelease(int aFromY, int aToY);
 		public void layoutVisiableItems(int aTotalWidth, int aFromY, int aToY);
 	}
