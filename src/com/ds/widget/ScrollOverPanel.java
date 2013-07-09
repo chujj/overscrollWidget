@@ -388,7 +388,6 @@ public class ScrollOverPanel extends View {
 
 	public interface IModel {
 		public IModelItem[] getItemLists();
-		public int getSingleHeight();
 		public void reloadData();
 
 		public int getTotalHeight();

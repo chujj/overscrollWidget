@@ -82,12 +82,6 @@ public class ColumnListView implements IModel {
 	}
 
 	@Override
-	public int getSingleHeight() {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
-	@Override
 	public void reloadData() {
 		throw new RuntimeException("cannot reloadData");
 	}
