@@ -4,7 +4,6 @@ import android.app.Service;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.graphics.Canvas;
-import android.graphics.Rect;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
@@ -42,7 +41,6 @@ public class ScrollOverPanel extends View {
 		if (mModel != null) {
 			mModel.layoutVisiableItems(width, -mCurrOffsetY, height + (-mCurrOffsetY));
 		}
-//		height = mModel.getTotalHeight() > height ? mModel.getTotalHeight() : height;
 		this.setMeasuredDimension(width, height);
 	}
 
@@ -142,37 +140,6 @@ public class ScrollOverPanel extends View {
 	
 		for (int i = 0; i < lists.length; i++) {
 			lists[i].drawSelf(canvas, aStart, aEnd, this.getMeasuredWidth(), mCurrOffsetY);
-		}
-	}
-
-	private void myDispatchDrawV2(Canvas canvas, int aStart, int aEnd, int aHeight) {
-		IModelItem[] lists = mModel.getItemLists();
-		int start_y, end_y = 0;
-		int single_height = mModel.getSingleHeight();
-
-		int from = -mCurrOffsetY;
-		int to = -mCurrOffsetY + (aHeight);
-		//				BdLog.e(from + " " + to);
-		from = from / single_height;
-		to = to / single_height + 1; // +1? , don't know why
-		//				BdLog.e(from + " " + to + " " + lists.length);
-		from = Math.max(from, 0);
-		to = Math.min(to, lists.length);
-		//				BdLog.e(from + " " + to);
-
-		for (int i = from; i < to; i++) { // give me a better algorithem
-			start_y = aStart + mCurrOffsetY + (i * single_height);
-			end_y = start_y + single_height;
-			if (end_y < aStart || start_y > aEnd)
-				continue;
-
-			Rect rect = canvas.getClipBounds();
-			rect.top = start_y;
-			rect.bottom = end_y;
-			canvas.save();
-			canvas.clipRect(rect);
-			lists[i].drawSelf(canvas, start_y, end_y, this.getMeasuredWidth(), 0);
-			canvas.restore();
 		}
 	}
 
