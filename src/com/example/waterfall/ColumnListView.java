@@ -8,6 +8,7 @@ import android.graphics.ColorFilter;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.util.Log;
+import android.util.SparseArray;
 
 import com.ds.widget.ScrollOverPanel.IModel;
 import com.ds.widget.ScrollOverPanel.IModelItem;
@@ -149,6 +150,16 @@ public class ColumnListView implements IModel {
 		
 	}
 	
+	public static SparseArray sBitmapMap = new SparseArray<Bitmap>();
+	private static Bitmap getBitmap(Context context, int aResId) {
+		if (sBitmapMap.get(aResId) != null) {
+			return (Bitmap) sBitmapMap.get(aResId);
+		}
+		Bitmap bitmap = BitmapFactory.decodeResource(context.getResources(), aResId);
+		sBitmapMap.put(aResId, bitmap);
+		
+		return bitmap;
+	}
 	public static class ItemDrawable extends Drawable implements IModelItem {
 
 		Bitmap mBitmap;
@@ -159,7 +170,7 @@ public class ColumnListView implements IModel {
 		Rect mRect;
 		
 		public ItemDrawable(Context context, int aResId) {
-			mBitmap = BitmapFactory.decodeResource(context.getResources(), aResId);
+			mBitmap = getBitmap(context, aResId);
 			mHeight = mBitmap.getHeight();
 			mWidth = mBitmap.getWidth();
 			mRect = new Rect();
