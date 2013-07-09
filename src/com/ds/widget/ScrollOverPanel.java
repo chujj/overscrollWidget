@@ -19,9 +19,9 @@ import android.widget.Scroller;
 
 public class ScrollOverPanel extends View {
 	private final static int LONG_CLICK_TICK = 600;
+	private static final float UI_OVER_PERCENT = 0.3f;
 	private static final String BOTTOM_PROMT = "on Bottom";
 	private static final String TOP_PROMT = "on Top";
-	private static final float UI_OVER_PERCENT = 0.3f;
 	
 	private static enum TouchState {
 		REST,
@@ -274,12 +274,18 @@ public class ScrollOverPanel extends View {
 			break;
 		}
 	}
+
 	private void checkLimit() {
 		int temp = mCurrOffsetY;
-		// FIXME: zhujj: getHeight() ?, give me sth defined
-		int max = mModel.getTotalHeight() - this.getHeight();
-		int slop = 0;
-		mCurrOffsetY = temp > slop ? slop : temp < -(max + slop) ? -(max + slop) : temp;
+
+		int min = this.getMeasuredHeight() - mModel.getTotalHeight();
+		int max = 0;
+		// FIXME store this value, for speed up, note the land/port condition
+		int overRange = (int) (UI_OVER_PERCENT * this.getMeasuredHeight());
+		max += overRange;
+		min -= overRange;
+		
+		mCurrOffsetY = temp > max ? max : temp < min ? min : temp;
 //		BdLog.e(temp + " " + max + " " + mCurrOffset_Y);
 	}
 
