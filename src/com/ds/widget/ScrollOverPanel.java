@@ -28,7 +28,6 @@ public class ScrollOverPanel extends View {
 	
 	private static enum TouchState {
 		REST,
-		SCROLLING,
 		AUTO
 	};
 
