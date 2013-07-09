@@ -295,6 +295,9 @@ public class ScrollOverPanel extends View {
 
 	final private void playScorllAnimation(int aDy, int aDuring) {
 		mylog(aDy + " || t: " + aDuring);
+		if (Math.abs(aDy) < 10) {
+			aDuring = 0;
+		}
 		mScroller.startScroll(0, this.mCurrOffsetY, 0, aDy, aDuring);
 		mTouchState = TouchState.AUTO;
 		this.postInvalidate();
