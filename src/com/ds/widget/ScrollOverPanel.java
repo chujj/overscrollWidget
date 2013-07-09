@@ -101,8 +101,27 @@ public class ScrollOverPanel extends View {
 			this.invalidate();
 		}
 
+		// last frame
 		if (mTouchState == TouchState.AUTO && this.mScroller.isFinished()) {
+			mylog("last frame");
 			mTouchState = TouchState.REST;
+			rollbackIfOverScroll();
+		}
+	}
+
+	private void rollbackIfOverScroll() {
+		int min = this.getMeasuredHeight() - mModel.getTotalHeight();
+		int max = 0;
+
+		int dy = 0;
+		if (mCurrOffsetY > max) {
+			dy = max - mCurrOffsetY;
+		} else if (mCurrOffsetY < min) {
+			dy = min - mCurrOffsetY;
+		}
+		
+		if (dy != 0) {
+			playScorllAnimation(dy, 500);
 		}
 	}
 
@@ -264,9 +283,7 @@ public class ScrollOverPanel extends View {
 			final int abs_y_spd = Math.abs(y_spd);
 			int dd = (abs_y_spd & 0xffffff00) > 0 ? (abs_y_spd - 255) : 0;
 			this.reset();
-			mScroller.startScroll(0, this.mCurrOffsetY, 0, (y_spd > 0 ? dd : -dd), abs_y_spd);
-			//				BdLog.e("" +  this.mCurrOffsetY + " 	" + y_spd + " " + dd);
-			mTouchState = TouchState.AUTO;
+			playScorllAnimation((y_spd > 0 ? dd : -dd), abs_y_spd);
 			this.invalidate();
 			break;
 
@@ -275,6 +292,11 @@ public class ScrollOverPanel extends View {
 		}
 	}
 
+	final private void playScorllAnimation(int aDy, int aDuring) {
+		mScroller.startScroll(0, this.mCurrOffsetY, 0, aDy, aDuring);
+		mTouchState = TouchState.AUTO;
+		this.postInvalidate();
+	}
 	private void checkLimit() {
 		int temp = mCurrOffsetY;
 
@@ -285,8 +307,17 @@ public class ScrollOverPanel extends View {
 		max += overRange;
 		min -= overRange;
 		
+		// test if we try to over max range
+		boolean hitRange;
+		hitRange = temp > max ? true : temp < min ? true : false;
+				
+		// min < temp < max
 		mCurrOffsetY = temp > max ? max : temp < min ? min : temp;
-//		BdLog.e(temp + " " + max + " " + mCurrOffset_Y);
+		
+		if (mTouchState == TouchState.AUTO && hitRange) { // if auto anim, stop continue scroll
+			mylog("auto anim && hit range");
+			mScroller.forceFinished(true);
+		}
 	}
 
 	private void perforeLongClick() {
@@ -347,4 +378,7 @@ public class ScrollOverPanel extends View {
 		public boolean onLongClick();
 	}
 
+	public static final void mylog(String aMsg) {
+		Log.e(ScrollOverPanel.class.getSimpleName(), aMsg);
+	}
 }
