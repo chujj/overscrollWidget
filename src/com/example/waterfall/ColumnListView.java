@@ -17,31 +17,47 @@ public class ColumnListView implements IModel {
 	public static final int UI_COLUMNT = 3;
 	
 	private ItemDrawable[] mItems;
+	private int[] columns_bottom;
+	private int mBottomIdx;
+	private Context mContext;
 
 	public ColumnListView(Context context) {
+		mContext = context;
 		int size = BITMAPS.length;
 		mItems = new ItemDrawable[size];
 		for (int i = 0; i < size; i++) {
 			mItems[i] = new ItemDrawable(context, BITMAPS[i]);
 		}
+		
+		columns_bottom = new int[UI_COLUMNT];
+		for (int i = 0; i < columns_bottom.length; i++) {
+			columns_bottom[i] = 0;
+		}
+		mBottomIdx = 0;
 	}
 
+	private int mTotalWidth;
 	@Override
 	public void layoutVisiableItems(int aTotalWidth, int aFromY, int aToY) {
-		layout(aTotalWidth);
+		mTotalWidth = aTotalWidth;
+		layout(aTotalWidth, true);
 	}
 	
-	private void layout(int aTotalWidth) {
-		int l, t, r, b, tmp;
-		int[] columns_height = new int[UI_COLUMNT];
+	private void layout(int aTotalWidth, boolean aLayoutAll) {
+		int l, t, r, b, tmp, startIdx;
+		int[] columns_height = columns_bottom;
+		startIdx = mBottomIdx;
 		
-		for (int i = 0; i < columns_height.length; i++) {// reset
-			columns_height[i] = 0;
+		if (aLayoutAll) { // reset
+			for (int i = 0; i < columns_height.length; i++) {
+				columns_height[i] = 0;
+			}
+			startIdx = 0;
 		}
 		
 		final int singleWidth = (int) (aTotalWidth * 1.0 / UI_COLUMNT);
 		
-		for (int i = 0; i < mItems.length; i++) {
+		for (int i = startIdx; i < mItems.length; i++) {
 			tmp = mItems[i].getHeightScaleWidth(singleWidth);
 			int[] bundle = getMinColumnHeightIdx(columns_height);
 			
@@ -53,7 +69,8 @@ public class ColumnListView implements IModel {
 			
 			columns_height[bundle[0]] = b;  // update culumnt_height
 		}
-		dumpAllItems();
+		mBottomIdx = mItems.length;
+//		dumpAllItems();
 	}
 	
 	private void dumpAllItems() {
@@ -112,6 +129,17 @@ public class ColumnListView implements IModel {
 
 	@Override
 	public void onOverBottom(OverAction aHandle) {
+		int before = mItems.length;
+		int more = BITMAPS.length;
+		int new_length = before + more;
+		ItemDrawable[] dest = new ItemDrawable[new_length];
+		System.arraycopy(mItems, 0, dest, 0, before);
+		for (int i = before; i < new_length; i++) {
+			dest[i] = new ItemDrawable(mContext, BITMAPS[i - before]);
+		}
+		mItems = dest;
+		layout(mTotalWidth, false);
+		
 		aHandle.done();
 	}
 	
