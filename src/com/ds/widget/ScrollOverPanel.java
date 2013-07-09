@@ -20,6 +20,9 @@ import android.widget.Scroller;
 public class ScrollOverPanel extends View {
 	private final static int LONG_CLICK_TICK = 600;
 	private static final float UI_OVER_PERCENT = 0.3f;
+	private static final int UI_ROLLBACK_ANIM_TIME = 500;
+	private static final int UI_SCROLL_ANIM_TIME = 500;
+	
 	private static final String BOTTOM_PROMT = "on Bottom";
 	private static final String TOP_PROMT = "on Top";
 	
@@ -121,7 +124,7 @@ public class ScrollOverPanel extends View {
 		}
 		
 		if (dy != 0) {
-			playScorllAnimation(dy, 500);
+			playScorllAnimation(dy, UI_ROLLBACK_ANIM_TIME);
 		}
 	}
 
@@ -278,13 +281,12 @@ public class ScrollOverPanel extends View {
 			this.reset();
 			break;
 		case MotionEvent.ACTION_UP:
-			mVelocityTracker.computeCurrentVelocity(1000);
-			final int y_spd = (int) mVelocityTracker.getYVelocity();
-			final int abs_y_spd = Math.abs(y_spd);
-			int dd = (abs_y_spd & 0xffffff00) > 0 ? (abs_y_spd - 255) : 0;
+			mVelocityTracker.computeCurrentVelocity(UI_SCROLL_ANIM_TIME);
+			int y_spd = (int) mVelocityTracker.getYVelocity();
+			y_spd = y_spd >> 2;
 			this.reset();
-			playScorllAnimation((y_spd > 0 ? dd : -dd), abs_y_spd);
-			this.invalidate();
+			
+			playScorllAnimation(y_spd, UI_SCROLL_ANIM_TIME);
 			break;
 
 		default:
@@ -293,10 +295,12 @@ public class ScrollOverPanel extends View {
 	}
 
 	final private void playScorllAnimation(int aDy, int aDuring) {
+		mylog(aDy + " || t: " + aDuring);
 		mScroller.startScroll(0, this.mCurrOffsetY, 0, aDy, aDuring);
 		mTouchState = TouchState.AUTO;
 		this.postInvalidate();
 	}
+
 	private void checkLimit() {
 		int temp = mCurrOffsetY;
 
