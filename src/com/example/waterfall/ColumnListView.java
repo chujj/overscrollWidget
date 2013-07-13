@@ -18,7 +18,7 @@ public class ColumnListView implements IModel {
 	public static final int UI_COLUMNT = 3;
 	
 	private ItemDrawable[] mItems;
-	private int[] columns_bottom;
+	private int[] columns_bottom, columns_top;
 	private int mBottomIdx;
 	private Context mContext;
 
@@ -34,6 +34,12 @@ public class ColumnListView implements IModel {
 		for (int i = 0; i < columns_bottom.length; i++) {
 			columns_bottom[i] = 0;
 		}
+		
+		columns_top = new int[UI_COLUMNT];
+		for (int i = 0; i < columns_top.length; i++) {
+			columns_top[i] = 0;
+		}
+
 		mBottomIdx = 0;
 	}
 
@@ -109,6 +115,18 @@ public class ColumnListView implements IModel {
 		int last = mItems.length - 1;
 		return Math.max(mItems[last].mBottom, mItems[last - 1].mBottom);// mustly it hit 
 	}
+	
+	@Override
+	public int getTopLedge() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public int getBottomLedge() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
 
 	@Override
 	public IModelItem[] getVisiableItems(int aFromY, int aToY) {
@@ -130,16 +148,16 @@ public class ColumnListView implements IModel {
 
 	@Override
 	public void onOverBottom(OverAction aHandle) {
-		int before = mItems.length;
-		int more = BITMAPS.length;
-		int new_length = before + more;
-		ItemDrawable[] dest = new ItemDrawable[new_length];
-		System.arraycopy(mItems, 0, dest, 0, before);
-		for (int i = before; i < new_length; i++) {
-			dest[i] = new ItemDrawable(mContext, BITMAPS[i - before]);
-		}
-		mItems = dest;
-		layout(mTotalWidth, false);
+//		int before = mItems.length;
+//		int more = BITMAPS.length;
+//		int new_length = before + more;
+//		ItemDrawable[] dest = new ItemDrawable[new_length];
+//		System.arraycopy(mItems, 0, dest, 0, before);
+//		for (int i = before; i < new_length; i++) {
+//			dest[i] = new ItemDrawable(mContext, BITMAPS[i - before]);
+//		}
+//		mItems = dest;
+//		layout(mTotalWidth, false);
 		
 		aHandle.done();
 	}

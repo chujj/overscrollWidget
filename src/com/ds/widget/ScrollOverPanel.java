@@ -391,6 +391,8 @@ public class ScrollOverPanel extends View {
 		public void reloadData();
 
 		public int getTotalHeight();
+		public int getTopLedge();
+		public int getBottomLedge();
 		public IModelItem[] getVisiableItems(int aFromY, int aToY);
 		public int hitWhichItem(int aX, int aY);
 		/** call when draw, so return as fast as you can
