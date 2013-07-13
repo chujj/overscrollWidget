@@ -114,8 +114,8 @@ public class ScrollOverPanel extends View {
 	}
 
 	private void rollbackIfOverScroll() {
-		int min = this.getMeasuredHeight() - mModel.getTotalHeight();
-		int max = 0;
+		int min = this.getMeasuredHeight() - mModel.getBottomLedge();
+		int max = -mModel.getTopLedge();
 
 		int dy = 0;
 		if (mCurrOffsetY > max) {
@@ -277,8 +277,8 @@ public class ScrollOverPanel extends View {
 	private void checkLimit() {
 		int temp = mCurrOffsetY;
 
-		int min = this.getMeasuredHeight() - mModel.getTotalHeight();
-		int max = 0;
+		int min = this.getMeasuredHeight() - mModel.getBottomLedge();
+		int max = -mModel.getTopLedge();
 		// call overScroll listeners
 		if (temp > max) {
 			onOverTop();
@@ -391,7 +391,13 @@ public class ScrollOverPanel extends View {
 		public void reloadData();
 
 		public int getTotalHeight();
+		/** offset from zero, should less than 0
+		 * @return
+		 */
 		public int getTopLedge();
+		/** offset from zero, should bigger than 0
+		 * @return
+		 */
 		public int getBottomLedge();
 		public IModelItem[] getVisiableItems(int aFromY, int aToY);
 		public int hitWhichItem(int aX, int aY);

@@ -10,6 +10,7 @@ import android.graphics.drawable.Drawable;
 import android.util.Log;
 import android.util.SparseArray;
 
+import com.ds.widget.ScrollOverPanel;
 import com.ds.widget.ScrollOverPanel.IModel;
 import com.ds.widget.ScrollOverPanel.IModelItem;
 import com.ds.widget.ScrollOverPanel.OverAction;
@@ -17,10 +18,12 @@ import com.ds.widget.ScrollOverPanel.OverAction;
 public class ColumnListView implements IModel {
 	public static final int UI_COLUMNT = 3;
 	
+	private Context mContext;
+	private int mTotalWidth;
+
 	private ItemDrawable[] mItems;
 	private int[] columns_bottom, columns_top;
-	private int mBottomIdx;
-	private Context mContext;
+	private int mBottomIdx, mTopIdx, mStartIdx;
 
 	public ColumnListView(Context context) {
 		mContext = context;
@@ -41,16 +44,17 @@ public class ColumnListView implements IModel {
 		}
 
 		mBottomIdx = 0;
+		mTopIdx = 0;
+		mStartIdx = 0;
 	}
 
-	private int mTotalWidth;
 	@Override
 	public void layoutVisiableItems(int aTotalWidth, int aFromY, int aToY) {
 		mTotalWidth = aTotalWidth;
-		layout(aTotalWidth, true);
+		layoutDownward(aTotalWidth, true);
 	}
 	
-	private void layout(int aTotalWidth, boolean aLayoutAll) {
+	private void layoutDownward(int aTotalWidth, boolean aLayoutAll) {
 		int l, t, r, b, tmp, startIdx;
 		int[] columns_height = columns_bottom;
 		startIdx = mBottomIdx;
@@ -80,6 +84,36 @@ public class ColumnListView implements IModel {
 //		dumpAllItems();
 	}
 	
+	private void layoutUpward(int aTotalWidth, boolean aLayoutAll) {
+		int l, t, r, b, tmp, startIdx;
+		int[] columns_height = columns_top;
+		startIdx = mTopIdx;
+
+		if (aLayoutAll) { // reset
+			for (int i = 0; i < columns_height.length; i++) {
+				columns_height[i] = 0;
+			}
+			startIdx = mStartIdx;
+		}
+
+		final int singleWidth = (int) (aTotalWidth * 1.0 / UI_COLUMNT);
+
+		for (int i = startIdx; i >= 0; i--) {
+			tmp = mItems[i].getHeightScaleWidth(singleWidth);
+			int[] bundle = getMaxColumnHeightIdx(columns_height);
+
+			l = bundle[0] * singleWidth;
+			r = l + singleWidth;
+			b = bundle[1];
+			t = b - tmp;
+			mItems[i].setBounds(l, t, r, b); // update DrawableItem
+
+			columns_height[bundle[0]] = t;  // update culumnt_height
+		}
+		mTopIdx = 0;
+		//		dumpAllItems();
+	}
+	
 	private void dumpAllItems() {
 		for (int i = 0; i < mItems.length; i++) {
 			Log.e("zhujj" , mItems[i].toString());
@@ -100,6 +134,20 @@ public class ColumnListView implements IModel {
 		return new int[] {idx, min};
 	}
 	
+	private int[] getMaxColumnHeightIdx(int[] aColumns) {
+		int idx, min;
+		idx = 0;
+		min = aColumns[0];
+		for (int i = 1; i < aColumns.length; i++) {
+			if (aColumns[i] > min) {
+				idx = i;
+				min = aColumns[i];
+			}
+		}
+
+		return new int[] {idx, min};
+	}
+	
 	@Override
 	public IModelItem[] getItemLists() {
 		return mItems;
@@ -112,20 +160,21 @@ public class ColumnListView implements IModel {
 
 	@Override
 	public int getTotalHeight() { 
-		int last = mItems.length - 1;
-		return Math.max(mItems[last].mBottom, mItems[last - 1].mBottom);// mustly it hit 
+		return getBottomLedge() + (-getTopLedge());
 	}
 	
 	@Override
 	public int getTopLedge() {
 		// TODO Auto-generated method stub
-		return 0;
+		int top = mItems[0].mTop;
+		ScrollOverPanel.mylog("top: " + top);
+		return top;
 	}
 
 	@Override
 	public int getBottomLedge() {
-		// TODO Auto-generated method stub
-		return 0;
+		int last = mItems.length - 1;
+		return Math.max(mItems[last].mBottom, mItems[last - 1].mBottom);// mustly it hit 
 	}
 
 	@Override
@@ -142,22 +191,35 @@ public class ColumnListView implements IModel {
 
 	@Override
 	public void onOverTop(OverAction aHandle) {
-		aHandle.done();
+		int before = mItems.length;
+		int more = BITMAPS.length;
+		int new_length = before + more;
+		ItemDrawable[] dest = new ItemDrawable[new_length];
+		System.arraycopy(mItems, 0, dest, more, before);
+		for (int i = 0; i < more; i++) {
+			dest[i] = new ItemDrawable(mContext, BITMAPS[i]);
+		}
+		mItems = dest;
+		mBottomIdx += more;
+		mStartIdx += more;
+		mTopIdx += (more - 1);
+		layoutUpward(mTotalWidth, false);
 
+		aHandle.done();
 	}
 
 	@Override
 	public void onOverBottom(OverAction aHandle) {
-//		int before = mItems.length;
-//		int more = BITMAPS.length;
-//		int new_length = before + more;
-//		ItemDrawable[] dest = new ItemDrawable[new_length];
-//		System.arraycopy(mItems, 0, dest, 0, before);
-//		for (int i = before; i < new_length; i++) {
-//			dest[i] = new ItemDrawable(mContext, BITMAPS[i - before]);
-//		}
-//		mItems = dest;
-//		layout(mTotalWidth, false);
+		int before = mItems.length;
+		int more = BITMAPS.length;
+		int new_length = before + more;
+		ItemDrawable[] dest = new ItemDrawable[new_length];
+		System.arraycopy(mItems, 0, dest, 0, before);
+		for (int i = before; i < new_length; i++) {
+			dest[i] = new ItemDrawable(mContext, BITMAPS[i - before]);
+		}
+		mItems = dest;
+		layoutDownward(mTotalWidth, false);
 		
 		aHandle.done();
 	}
