@@ -5,6 +5,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.ColorFilter;
+import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.util.Log;
@@ -165,10 +166,7 @@ public class ColumnListView implements IModel {
 	
 	@Override
 	public int getTopLedge() {
-		// TODO Auto-generated method stub
-		int top = mItems[0].mTop;
-		ScrollOverPanel.mylog("top: " + top);
-		return top;
+		return mItems[0].mTop;
 	}
 
 	@Override
@@ -185,10 +183,37 @@ public class ColumnListView implements IModel {
 
 	@Override
 	public int hitWhichItem(int aX, int aY) {
-		// TODO Auto-generated method stub
-		return 0;
+		return findHit(0, mItems.length - 1, aX, aY);
+	}
+	
+	private int findHit(int aStart, int aEnd, int aX, int aY) {
+		if (aStart >= aEnd) {
+			if (aStart == aEnd) {
+				return hitItem(aStart, aX, aY) ? aStart : 0;
+			} else {
+				return 0;
+			}
+		} else {
+			int tmp = (aStart + aEnd) / 2;
+			if (hitItem(tmp, aX, aY)) {
+				return tmp;
+			} else {
+				int next_start, next_end;
+				if (mItems[tmp].mBottom < aY) {
+					next_start = tmp + 1;
+					next_end = aEnd;
+				} else {
+					next_start = aStart;
+					next_end = tmp - 1;
+				}
+				return findHit(next_start, next_end, aX, aY);
+			}
+		}
 	}
 
+	final private boolean hitItem(int aWhich, int aX, int aY) {
+		return mItems[aWhich].mRect.contains(aX, aY);
+	}
 	@Override
 	public void onOverTop(OverAction aHandle) {
 		int before = mItems.length;
@@ -248,6 +273,8 @@ public class ColumnListView implements IModel {
 		
 		int mLeftMargin, mTopMargin, mRightMargin, mBottomMargin;
 		Rect mRect;
+		private boolean mIsClicked;
+		private static Paint mPressedPaint;
 		
 		public ItemDrawable(Context context, int aResId) {
 			mBitmap = getBitmap(context, aResId);
@@ -255,6 +282,11 @@ public class ColumnListView implements IModel {
 			mWidth = mBitmap.getWidth();
 			mRect = new Rect();
 			setMargin(0);
+			mIsClicked = false;
+			if (mPressedPaint == null) {
+				mPressedPaint = new Paint();
+				mPressedPaint.setColor(0xff0000ff);
+			}
 		}
 
 		public void setMargin(int aBorderMargin) {
@@ -278,27 +310,27 @@ public class ColumnListView implements IModel {
 		@Override
 		public void drawSelf(Canvas aCanvas, int aStart, int aEnd, int aTotalWidth, int aOffset) {
 			mRect.set(mLeft, mTop , mRight, mBottom);
-			mRect.inset(5, 5);
 			mRect.offset(0, aOffset);
+			if (mIsClicked) {
+				aCanvas.drawRect(mRect, mPressedPaint);
+			}
+			mRect.inset(5, 5);
 			aCanvas.drawBitmap(mBitmap, null, mRect, null);
 		}
 
 		@Override
 		public void keydown(int aOffsetX, int aOffsetY) {
-			// TODO Auto-generated method stub
-			
+			this.mIsClicked = true;
 		}
 
 		@Override
 		public void keyUpCancel() {
-			// TODO Auto-generated method stub
-			
+			this.mIsClicked = false;
 		}
 
 		@Override
 		public void onClick() {
-			// TODO Auto-generated method stub
-			
+			this.mIsClicked = false;
 		}
 
 		@Override
