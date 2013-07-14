@@ -14,6 +14,8 @@ import android.util.Log;
 import android.util.SparseArray;
 import android.view.View;
 
+import com.ds.bitmaputils.BitmapGetter;
+import com.ds.bitmaputils.BitmapGetter.BitmapGotCallBack;
 import com.ds.theard.WorkThread;
 import com.ds.widget.ScrollOverPanel.IModel;
 import com.ds.widget.ScrollOverPanel.IModelItem;
@@ -59,7 +61,11 @@ public class ColumnListView implements IModel {
 	public void setDisplayingView(View aRView) {
 		mDisplayingView = aRView;
 	}
-	
+	final private void refreshUI() {
+		if (mDisplayingView != null) {
+			mDisplayingView.postInvalidate();
+		}
+	}
 	@Override
 	public void layoutVisiableItems(int aTotalWidth, int aFromY, int aToY) {
 		mTotalWidth = aTotalWidth;
@@ -276,7 +282,8 @@ public class ColumnListView implements IModel {
 		
 		return bitmap;
 	}
-	public static class ItemDrawable extends Drawable implements IModelItem {
+	private static Paint mPressedPaint, mBgPaint;
+	public class ItemDrawable extends Drawable implements IModelItem {
 
 		private BitmapGroupBean mGroup;
 		Bitmap mBitmap;
@@ -286,8 +293,7 @@ public class ColumnListView implements IModel {
 		int mLeftMargin, mTopMargin, mRightMargin, mBottomMargin;
 		Rect mRect;
 		private boolean mIsClicked;
-		private static Paint mPressedPaint, mBgPaint;
-		
+
 		public ItemDrawable(Context context, int aResId) {
 			mBitmap = getBitmap(context, aResId);
 			mHeight = mBitmap.getHeight();
@@ -337,16 +343,27 @@ public class ColumnListView implements IModel {
 		}
 
 		@Override
-		public void drawSelf(Canvas aCanvas, int aStart, int aEnd, int aTotalWidth, int aOffset) {
-			mRect.set(mLeft, mTop , mRight, mBottom);
+		public void drawSelf(Canvas aCanvas, int aStart, int aEnd,
+				int aTotalWidth, int aOffset) {
+			mRect.set(mLeft, mTop, mRight, mBottom);
 			mRect.offset(0, aOffset);
 			if (mIsClicked) {
 				aCanvas.drawRect(mRect, mPressedPaint);
 			}
 			mRect.inset(5, 5);
 			aCanvas.drawRect(mRect, mBgPaint);
-			if (mBitmap != null)
+			if (mBitmap != null) {
 				aCanvas.drawBitmap(mBitmap, null, mRect, null);
+			} else {
+				mBitmap = BitmapGetter.tryGetBitmapFromUrlOrCallback(
+						mGroup.mCoverUrl, new BitmapGotCallBack() {
+							@Override
+							public void onBitmapGot(Bitmap aBitmap) {
+								mBitmap = aBitmap;
+								ColumnListView.this.refreshUI();
+							}
+						});
+			}
 		}
 
 		@Override
@@ -423,9 +440,7 @@ public class ColumnListView implements IModel {
 				
 				if (mTotalWidth != 0) {
 					layoutDownward(mTotalWidth, true);
-					if (mDisplayingView != null) {
-						mDisplayingView.postInvalidate();
-					}
+					refreshUI();
 				}
 				break;
 
