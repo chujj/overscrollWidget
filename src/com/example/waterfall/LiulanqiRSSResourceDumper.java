@@ -25,6 +25,7 @@ http://rss.cbs.baidu.com/rssfeed/fetch.php?type=entry_list&imglistonly=1&channel
 	private final static int BUFFER_LENGTH = 500;
 	private ByteArrayOutputStream mBuffer;
 	private byte[] buffer;
+	private int mBottomIdx, mTopIdx;
 	
 	public LiulanqiRSSResourceDumper() {
 		buffer = new byte[BUFFER_LENGTH];
@@ -33,8 +34,18 @@ http://rss.cbs.baidu.com/rssfeed/fetch.php?type=entry_list&imglistonly=1&channel
 
 	public BitmapGroupBean[] firstQuery() {
 		BitmapGroupBean[] retval = parseNetData(queryNet(DEFAULT_QUERY_URL));
+		mTopIdx = retval[0].mIdx;
+		mBottomIdx = retval[retval.length - 1].mIdx;
 		dumpGroup(retval);
 		return retval;
+	}
+	
+	private String getOlderQueryUrl() {
+		StringBuilder sb = new StringBuilder();
+		sb.append("http://rss.cbs.baidu.com/rssfeed/fetch.php?type=entry_list&imglistonly=1&channel=EN_");
+		sb.append(mBottomIdx);
+		sb.append("&num=50&dir=down");
+		return sb.toString();
 	}
 	
 	private void dumpGroup(BitmapGroupBean[] aGroup) {
@@ -43,8 +54,11 @@ http://rss.cbs.baidu.com/rssfeed/fetch.php?type=entry_list&imglistonly=1&channel
 		}
 	}
 	
-	public void getOlder() {
-		
+	public BitmapGroupBean[] getOlder() {
+		BitmapGroupBean[] retval = parseNetData(queryNet(getOlderQueryUrl()));
+		mBottomIdx = retval[retval.length - 1].mIdx;
+		dumpGroup(retval);
+		return retval;
 	}
 	
 	public void getNewer() {
@@ -58,8 +72,8 @@ http://rss.cbs.baidu.com/rssfeed/fetch.php?type=entry_list&imglistonly=1&channel
 	private String queryNet(String aUrl) {
 		String retval = null;
 		try {
-			
-			URL test = new URL(DEFAULT_QUERY_URL);
+			mBuffer.reset();
+			URL test = new URL(aUrl);
 //			HttpURLConnection hc = (HttpURLConnection) test.openConnection();
 			
 			InputStream is = /*hc.getInputStream(); */ test.openStream ();

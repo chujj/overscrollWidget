@@ -17,6 +17,7 @@ import android.view.View;
 import com.ds.bitmaputils.BitmapGetter;
 import com.ds.bitmaputils.BitmapGetter.BitmapGotCallBack;
 import com.ds.theard.WorkThread;
+import com.ds.widget.ScrollOverPanel.BottomActionDone;
 import com.ds.widget.ScrollOverPanel.IModel;
 import com.ds.widget.ScrollOverPanel.IModelItem;
 import com.ds.widget.ScrollOverPanel.OverAction;
@@ -28,6 +29,7 @@ public class ColumnListView implements IModel {
 	private Context mContext;
 	private int mTotalWidth;
 	private View mDisplayingView;
+	private LiulanqiRSSResourceDumper mBitmapResource;
 
 	/**
 	 * NOTE! makesure access mItems thread-safe
@@ -41,6 +43,7 @@ public class ColumnListView implements IModel {
 		mContext = context;
 		mWorkHandler = new WorkHandler();
 		mItems = new ItemDrawable[0];
+		mBitmapResource = new LiulanqiRSSResourceDumper();
 		mWorkHandler.sendEmptyMessage(WorkHandler.FIRST_QUERY);
 
 		columns_bottom = new int[UI_COLUMNT];
@@ -252,18 +255,7 @@ public class ColumnListView implements IModel {
 
 	@Override
 	public void onOverBottom(OverAction aHandle) {
-		int before = mItems.length;
-		int more = BITMAPS.length;
-		int new_length = before + more;
-		ItemDrawable[] dest = new ItemDrawable[new_length];
-		System.arraycopy(mItems, 0, dest, 0, before);
-		for (int i = before; i < new_length; i++) {
-			dest[i] = new ItemDrawable(mContext, BITMAPS[i - before]);
-		}
-		mItems = dest;
-		layoutDownward(mTotalWidth, false);
-		
-		aHandle.done();
+		Message.obtain(mWorkHandler, WorkHandler.OLDER_QUERY, aHandle).sendToTarget();
 	}
 	
 	@Override
@@ -421,6 +413,9 @@ public class ColumnListView implements IModel {
 	private class WorkHandler extends Handler {
 		
 		public final static int FIRST_QUERY = 0;
+		public final static int OLDER_QUERY = 1;
+		public final static int NEWER_QUERY = 2;
+		
 		public WorkHandler() {
 			super(WorkThread.getsWorkLooper());
 		}
@@ -430,7 +425,7 @@ public class ColumnListView implements IModel {
 			switch (msg.what) {
 			case FIRST_QUERY:
 				synchronized (ColumnListView.class) {
-					BitmapGroupBean[] first = new LiulanqiRSSResourceDumper().firstQuery();
+					BitmapGroupBean[] first = mBitmapResource.firstQuery();
 					int size = first.length;
 					mItems = new ItemDrawable[size];
 					for (int i = 0; i < size; i++) {
@@ -443,7 +438,25 @@ public class ColumnListView implements IModel {
 					refreshUI();
 				}
 				break;
+			case OLDER_QUERY:
+				BitmapGroupBean[] older = mBitmapResource.getOlder();
+				synchronized (ColumnListView.class) {
+					int before = mItems.length;
+					int more = older.length;
+					int new_length = before + more;
+					ItemDrawable[] dest = new ItemDrawable[new_length];
+					System.arraycopy(mItems, 0, dest, 0, before);
+					for (int i = before; i < new_length; i++) {
+						dest[i] = new ItemDrawable(mContext, older[i - before]);
+					}
+					mItems = dest;
+				}
+				layoutDownward(mTotalWidth, false);
 
+				((BottomActionDone) msg.obj ).done();
+				break;
+			case NEWER_QUERY:
+				break;
 			default:
 				break;
 			}
