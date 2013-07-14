@@ -22,10 +22,16 @@ public class WorkThread {
 	}
 
 	public static Looper getsWorkLooper() {
+		if (sWorkLooper == null) {
+			throw new RuntimeException("Thread not ready, call init");
+		}
 		return sWorkLooper;
 	}
 
 	public static Thread getsWorkThread() {
+		if (sWorkThread == null) {
+			throw new RuntimeException("Thread not ready, call init");
+		}
 		return sWorkThread;
 	}
 

@@ -2,7 +2,6 @@ package com.example.waterfall;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
-import java.net.HttpURLConnection;
 import java.net.URL;
 
 import org.json.JSONArray;

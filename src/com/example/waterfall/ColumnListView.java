@@ -8,10 +8,12 @@ import android.graphics.ColorFilter;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
+import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
 import android.util.SparseArray;
+import android.view.View;
 
-import com.ds.widget.ScrollOverPanel;
 import com.ds.widget.ScrollOverPanel.IModel;
 import com.ds.widget.ScrollOverPanel.IModelItem;
 import com.ds.widget.ScrollOverPanel.OverAction;
@@ -22,26 +24,22 @@ public class ColumnListView implements IModel {
 	
 	private Context mContext;
 	private int mTotalWidth;
+	private View mDisplayingView;
 
+	/**
+	 * NOTE! makesure access mItems thread-safe
+	 */
 	private ItemDrawable[] mItems;
 	private int[] columns_bottom, columns_top;
 	private int mBottomIdx, mTopIdx, mStartIdx;
+	private WorkHandler mWorkHandler;
 
 	public ColumnListView(Context context) {
 		mContext = context;
-		BitmapGroupBean[] first = new LiulanqiRSSResourceDumper().firstQuery();
-		int size = first.length;
-		mItems = new ItemDrawable[size];
-		for (int i = 0; i < size; i++) {
-			mItems[i] = new ItemDrawable(context, first[i]);
-		}
-		
-//		int size = BITMAPS.length;
-//		mItems = new ItemDrawable[size];
-//		for (int i = 0; i < size; i++) {
-//			mItems[i] = new ItemDrawable(context, BITMAPS[i]);
-//		}
-		
+		mWorkHandler = new WorkHandler();
+		mItems = new ItemDrawable[0];
+		mWorkHandler.sendEmptyMessage(WorkHandler.FIRST_QUERY);
+
 		columns_bottom = new int[UI_COLUMNT];
 		for (int i = 0; i < columns_bottom.length; i++) {
 			columns_bottom[i] = 0;
@@ -57,6 +55,10 @@ public class ColumnListView implements IModel {
 		mStartIdx = 0;
 	}
 
+	public void setDisplayingView(View aRView) {
+		mDisplayingView = aRView;
+	}
+	
 	@Override
 	public void layoutVisiableItems(int aTotalWidth, int aFromY, int aToY) {
 		mTotalWidth = aTotalWidth;
@@ -398,7 +400,41 @@ public class ColumnListView implements IModel {
 		
 	}
 
-	
+	private class WorkHandler extends Handler {
+		
+		public final static int FIRST_QUERY = 0;
+		public WorkHandler() {
+			super(WorkThread.getsWorkLooper());
+		}
+		
+		@Override
+		public void handleMessage(Message msg) {
+			switch (msg.what) {
+			case FIRST_QUERY:
+				synchronized (ColumnListView.class) {
+					BitmapGroupBean[] first = new LiulanqiRSSResourceDumper().firstQuery();
+					int size = first.length;
+					mItems = new ItemDrawable[size];
+					for (int i = 0; i < size; i++) {
+						mItems[i] = new ItemDrawable(mContext, first[i]);
+					}
+				}
+				
+				if (mTotalWidth != 0) {
+					layoutDownward(mTotalWidth, true);
+					if (mDisplayingView != null) {
+						mDisplayingView.postInvalidate();
+					}
+				}
+				break;
+
+			default:
+				break;
+			}
+		}
+		
+	};
+
 	private static final int[] BITMAPS = {
 		R.drawable.home_icon_163,
 		R.drawable.home_icon_application_center,

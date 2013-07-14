@@ -1,14 +1,11 @@
 package com.example.waterfall;
 
+import android.app.Activity;
+import android.os.Bundle;
+import android.view.ViewGroup;
+
 import com.ds.widget.ScrollOverPanel;
 import com.ds.widget.ScrollOverPanel.IModel;
-
-import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
-import android.app.Activity;
-import android.view.Menu;
-import android.view.ViewGroup;
 
 public class MainActivity extends Activity {
 
@@ -19,12 +16,9 @@ public class MainActivity extends Activity {
 		
 		WorkThread.init();
 		if (mPanel == null) {
-
-			final IModel model = new ColumnListView(MainActivity.this);
-
+			ColumnListView model = new ColumnListView(MainActivity.this);
 			mPanel = (new ScrollOverPanel(MainActivity.this, model));
-
-
+			model.setDisplayingView(mPanel);
 		}
 
 		this.setContentView(mPanel);

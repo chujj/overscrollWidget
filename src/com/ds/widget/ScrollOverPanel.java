@@ -46,11 +46,7 @@ public class ScrollOverPanel extends View {
 	
 	private TopActionDone mTopAction;
 	private BottomActionDone mBottomAction;
-	
-	public ScrollOverPanel(Context context) {
-		this(context, null);
-	}
-	
+
 	public ScrollOverPanel(Context context, IModel aModel) {
 		super(context);
 		
