@@ -17,6 +17,7 @@ public class MainActivity extends Activity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		
+		WorkThread.init();
 		if (mPanel == null) {
 
 			final IModel model = new ColumnListView(MainActivity.this);
