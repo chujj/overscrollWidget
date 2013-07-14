@@ -41,7 +41,7 @@ public class BitmapGetter {
 			if (getInstance().mFetchTask.containsKey(aUrl)) {
 				getInstance().mFetchTask.put(aUrl, aCallback);
 			} else {
-//				mylog("zhujj: " + aUrl);
+				mylog("zhujj: " + aUrl);
 				getInstance().fetchBitmapOnNet(aUrl, aCallback);
 			}
 		}

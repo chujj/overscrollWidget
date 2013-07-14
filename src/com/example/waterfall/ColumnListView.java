@@ -8,6 +8,7 @@ import android.graphics.ColorFilter;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
+import android.hardware.Camera.Area;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
@@ -339,6 +340,11 @@ public class ColumnListView implements IModel {
 				int aTotalWidth, int aOffset) {
 			mRect.set(mLeft, mTop, mRight, mBottom);
 			mRect.offset(0, aOffset);
+			
+			if (mRect.top > aEnd + aOffset|| mRect.bottom < mTop + aOffset) {
+				return;
+			}
+			
 			if (mIsClicked) {
 				aCanvas.drawRect(mRect, mPressedPaint);
 			}
