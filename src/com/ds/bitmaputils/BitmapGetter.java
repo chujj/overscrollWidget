@@ -33,10 +33,17 @@ public class BitmapGetter {
 		mFetchTask = new HashMap<String, BitmapGotCallBack>();
 	}
 
+	
 	public static Bitmap tryGetBitmapFromUrlOrCallback(String aUrl, BitmapGotCallBack aCallback) {
+		
 		Bitmap retval = getInstance().getCachedBitmap(aUrl);
 		if (retval == null) {
-			getInstance().fetchBitmapOnNet(aUrl, aCallback);
+			if (getInstance().mFetchTask.containsKey(aUrl)) {
+				getInstance().mFetchTask.put(aUrl, aCallback);
+			} else {
+//				mylog("zhujj: " + aUrl);
+				getInstance().fetchBitmapOnNet(aUrl, aCallback);
+			}
 		}
 		return retval;
 	}
@@ -108,5 +115,9 @@ public class BitmapGetter {
 
 	public interface BitmapGotCallBack {
 		public void onBitmapGot(Bitmap aBitmap);
+	}
+	
+	private static void mylog(String aMsg) {
+		System.out.println(aMsg);
 	}
 }
