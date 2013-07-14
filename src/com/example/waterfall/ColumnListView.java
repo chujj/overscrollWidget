@@ -15,9 +15,10 @@ import com.ds.widget.ScrollOverPanel;
 import com.ds.widget.ScrollOverPanel.IModel;
 import com.ds.widget.ScrollOverPanel.IModelItem;
 import com.ds.widget.ScrollOverPanel.OverAction;
+import com.example.waterfall.LiulanqiRSSResourceDumper.BitmapGroupBean;
 
 public class ColumnListView implements IModel {
-	public static final int UI_COLUMNT = 3;
+	public static final int UI_COLUMNT = 2;
 	
 	private Context mContext;
 	private int mTotalWidth;
@@ -28,11 +29,18 @@ public class ColumnListView implements IModel {
 
 	public ColumnListView(Context context) {
 		mContext = context;
-		int size = BITMAPS.length;
+		BitmapGroupBean[] first = new LiulanqiRSSResourceDumper().firstQuery();
+		int size = first.length;
 		mItems = new ItemDrawable[size];
 		for (int i = 0; i < size; i++) {
-			mItems[i] = new ItemDrawable(context, BITMAPS[i]);
+			mItems[i] = new ItemDrawable(context, first[i]);
 		}
+		
+//		int size = BITMAPS.length;
+//		mItems = new ItemDrawable[size];
+//		for (int i = 0; i < size; i++) {
+//			mItems[i] = new ItemDrawable(context, BITMAPS[i]);
+//		}
 		
 		columns_bottom = new int[UI_COLUMNT];
 		for (int i = 0; i < columns_bottom.length; i++) {
@@ -82,7 +90,7 @@ public class ColumnListView implements IModel {
 			columns_height[bundle[0]] = b;  // update culumnt_height
 		}
 		mBottomIdx = mItems.length;
-//		dumpAllItems();
+		dumpAllItems();
 	}
 	
 	private void layoutUpward(int aTotalWidth, boolean aLayoutAll) {
@@ -267,6 +275,7 @@ public class ColumnListView implements IModel {
 	}
 	public static class ItemDrawable extends Drawable implements IModelItem {
 
+		private BitmapGroupBean mGroup;
 		Bitmap mBitmap;
 		int mHeight, mWidth;
 		int mLeft, mTop, mRight, mBottom;
@@ -274,7 +283,7 @@ public class ColumnListView implements IModel {
 		int mLeftMargin, mTopMargin, mRightMargin, mBottomMargin;
 		Rect mRect;
 		private boolean mIsClicked;
-		private static Paint mPressedPaint;
+		private static Paint mPressedPaint, mBgPaint;
 		
 		public ItemDrawable(Context context, int aResId) {
 			mBitmap = getBitmap(context, aResId);
@@ -286,6 +295,23 @@ public class ColumnListView implements IModel {
 			if (mPressedPaint == null) {
 				mPressedPaint = new Paint();
 				mPressedPaint.setColor(0xff0000ff);
+				mBgPaint = new Paint();
+				mBgPaint.setColor(0xff00aa00);
+			}
+		}
+		
+		public ItemDrawable(Context context, BitmapGroupBean aGroup) {
+			mHeight = aGroup.mH;
+			mWidth = aGroup.mW;
+			mGroup = aGroup;
+			mRect = new Rect();
+			setMargin(0);
+			mIsClicked = false;
+			if (mPressedPaint == null) {
+				mPressedPaint = new Paint();
+				mPressedPaint.setColor(0xff0000ff);
+				mBgPaint = new Paint();
+				mBgPaint.setColor(0xff00aa00);
 			}
 		}
 
@@ -315,7 +341,9 @@ public class ColumnListView implements IModel {
 				aCanvas.drawRect(mRect, mPressedPaint);
 			}
 			mRect.inset(5, 5);
-			aCanvas.drawBitmap(mBitmap, null, mRect, null);
+			aCanvas.drawRect(mRect, mBgPaint);
+			if (mBitmap != null)
+				aCanvas.drawBitmap(mBitmap, null, mRect, null);
 		}
 
 		@Override

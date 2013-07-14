@@ -4,6 +4,8 @@ import com.ds.widget.ScrollOverPanel;
 import com.ds.widget.ScrollOverPanel.IModel;
 
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.app.Activity;
 import android.view.Menu;
 import android.view.ViewGroup;
@@ -14,9 +16,14 @@ public class MainActivity extends Activity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		
 		if (mPanel == null) {
-			IModel model = new ColumnListView(this);
-			mPanel = (new ScrollOverPanel(this, model));
+
+			final IModel model = new ColumnListView(MainActivity.this);
+
+			mPanel = (new ScrollOverPanel(MainActivity.this, model));
+
+
 		}
 
 		this.setContentView(mPanel);
