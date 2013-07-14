@@ -10,8 +10,11 @@ import android.graphics.BitmapFactory;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.util.LogPrinter;
+import android.util.Printer;
 
 public class BitmapGetter {
+	private static final boolean DEBUG_PERFORMANCE = false;
 	private static BitmapGetter sInstance;
 	
 	private WorkHandler mWorkHandler;
@@ -26,11 +29,13 @@ public class BitmapGetter {
 		return sInstance;
 	}
 	
+	private Printer mTheradprint;
 	private BitmapGetter() {
 		mWorkHandler = new WorkHandler();
 		mUIHandler = new UIHandler();
 		mBitmapCache = new HashMap<String, Bitmap>();
 		mFetchTask = new HashMap<String, BitmapGotCallBack>();
+		mTheradprint = new LogPrinter(android.util.Log.ERROR, "count-dump");
 	}
 
 	
@@ -40,9 +45,16 @@ public class BitmapGetter {
 		if (release != null) {
 			release.recycle();
 			instance.mBitmapCache.remove(aUrl);
+			instance.releasPending(aUrl);
 		}
 	}
+	
+	final private void releasPending(String aUrl) {
+		mWorkHandler.removeCallbacksAndMessages(aUrl);
+	}
+	
 	public static Bitmap tryGetBitmapFromUrlOrCallback(String aUrl, BitmapGotCallBack aCallback) {
+		
 		
 		Bitmap retval = getInstance().getCachedBitmap(aUrl);
 		if (retval == null) {
@@ -52,6 +64,11 @@ public class BitmapGetter {
 				mylog("zhujj: " + aUrl);
 				getInstance().fetchBitmapOnNet(aUrl, aCallback);
 			}
+		}
+		if (DEBUG_PERFORMANCE) {
+			mylog(">>>>>>>>>>>>>>>>>>>>>");
+			getInstance().mWorkHandler.dump(getInstance().mTheradprint, "count-dump");
+			mylog("<<<<<<<<<<<<<<<<<<<<<");
 		}
 		return retval;
 	}
