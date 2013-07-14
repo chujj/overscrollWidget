@@ -237,19 +237,19 @@ public class ColumnListView implements IModel {
 	}
 	@Override
 	public void onOverTop(OverAction aHandle) {
-		int before = mItems.length;
-		int more = BITMAPS.length;
-		int new_length = before + more;
-		ItemDrawable[] dest = new ItemDrawable[new_length];
-		System.arraycopy(mItems, 0, dest, more, before);
-		for (int i = 0; i < more; i++) {
-			dest[i] = new ItemDrawable(mContext, BITMAPS[i]);
-		}
-		mItems = dest;
-		mBottomIdx += more;
-		mStartIdx += more;
-		mTopIdx += (more - 1);
-		layoutUpward(mTotalWidth, false);
+//		int before = mItems.length;
+//		int more = BITMAPS.length;
+//		int new_length = before + more;
+//		ItemDrawable[] dest = new ItemDrawable[new_length];
+//		System.arraycopy(mItems, 0, dest, more, before);
+//		for (int i = 0; i < more; i++) {
+//			dest[i] = new ItemDrawable(mContext, BITMAPS[i]);
+//		}
+//		mItems = dest;
+//		mBottomIdx += more;
+//		mStartIdx += more;
+//		mTopIdx += (more - 1);
+//		layoutUpward(mTotalWidth, false);
 
 		aHandle.done();
 	}
@@ -339,11 +339,13 @@ public class ColumnListView implements IModel {
 		public void drawSelf(Canvas aCanvas, int aStart, int aEnd,
 				int aTotalWidth, int aOffset) {
 			mRect.set(mLeft, mTop, mRight, mBottom);
-			mRect.offset(0, aOffset);
 			
-			if (mRect.top > aEnd + aOffset|| mRect.bottom < mTop + aOffset) {
+			if (mRect.top > aEnd || mRect.bottom < aStart) {
+				mBitmap = null;
+				BitmapGetter.releaseBitmap(mGroup.mCoverUrl);
 				return;
 			}
+			mRect.offset(0, aOffset);
 			
 			if (mIsClicked) {
 				aCanvas.drawRect(mRect, mPressedPaint);

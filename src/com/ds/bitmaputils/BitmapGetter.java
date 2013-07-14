@@ -26,7 +26,7 @@ public class BitmapGetter {
 		return sInstance;
 	}
 	
-	public BitmapGetter() {
+	private BitmapGetter() {
 		mWorkHandler = new WorkHandler();
 		mUIHandler = new UIHandler();
 		mBitmapCache = new HashMap<String, Bitmap>();
@@ -34,6 +34,14 @@ public class BitmapGetter {
 	}
 
 	
+	public static void releaseBitmap(String aUrl) {
+		BitmapGetter instance = getInstance();
+		Bitmap release = instance.mBitmapCache.get(aUrl);
+		if (release != null) {
+			release.recycle();
+			instance.mBitmapCache.remove(aUrl);
+		}
+	}
 	public static Bitmap tryGetBitmapFromUrlOrCallback(String aUrl, BitmapGotCallBack aCallback) {
 		
 		Bitmap retval = getInstance().getCachedBitmap(aUrl);
