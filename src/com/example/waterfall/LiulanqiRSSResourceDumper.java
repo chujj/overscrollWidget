@@ -83,10 +83,31 @@ http://rss.cbs.baidu.com/rssfeed/fetch.php?type=entry_list&imglistonly=1&channel
 		}
 	}
 	
-	public BitmapGroupBean[] getOlder() {
-		BitmapGroupBean[] retval = parseNetData(queryNet(getOlderQueryUrl()));
-		mBottomIdx = retval[retval.length - 1].mIdx;
-		dumpGroup(retval);
+	public BitmapGroupBean[] getOlder(int aIndex) {
+
+		BitmapGroupBean[] retval = null;
+//		int a = mItems[mBottomIdx].mGroup.mIdx;
+		// read db accord server_id first
+		Cursor cr = mDBOperator.queryDown(aIndex - 1);
+		if (cr.getCount() > 0) {
+			cr.moveToFirst();
+			retval = new BitmapGroupBean[cr.getCount()];
+			int i = 0;
+			while (!cr.isAfterLast()) {
+				BitmapGroupBean bean = new BitmapGroupBean(mDBOperator, cr);
+
+				retval[i++] = bean;
+				cr.moveToNext();
+			}
+		} else {
+			retval = parseNetData(queryNet(getOlderQueryUrl()));
+			mBottomIdx = retval[retval.length - 1].mIdx;
+			for (BitmapGroupBean bitmapGroupBean : retval) {
+				bitmapGroupBean.insertToDb(mDBOperator);
+			}
+//			mModel.saveLastVisitIndex(retval[0].mIdx);
+			dumpGroup(retval);
+		}
 		return retval;
 	}
 	

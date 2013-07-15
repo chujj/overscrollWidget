@@ -449,7 +449,7 @@ public class ColumnListView implements IModel {
 				}
 				break;
 			case OLDER_QUERY:
-				BitmapGroupBean[] older = mBitmapResource.getOlder();
+				BitmapGroupBean[] older = mBitmapResource.getOlder(mItems[mItems.length - 1].mGroup.mIdx);
 				synchronized (ColumnListView.class) {
 					int before = mItems.length;
 					int more = older.length;

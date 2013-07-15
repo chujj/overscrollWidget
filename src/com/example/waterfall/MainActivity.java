@@ -30,12 +30,6 @@ public class MainActivity extends Activity {
 
 		this.setContentView(mPanel);
 	}
-	
-	@Override
-	protected void onPause() {
-		super.onPause();
-		mModel.saveLastVisitIndex();
-	}
 
 	@Override
 	protected void onDestroy() {
