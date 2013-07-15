@@ -1,10 +1,9 @@
 package com.ds.bitmaputils;
 
+import java.io.ByteArrayOutputStream;
+import java.io.FileOutputStream;
 import java.net.URL;
 import java.util.HashMap;
-
-import com.ds.io.DsLog;
-import com.ds.theard.WorkThread;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -13,6 +12,9 @@ import android.os.Looper;
 import android.os.Message;
 import android.util.LogPrinter;
 import android.util.Printer;
+
+import com.ds.io.DsLog;
+import com.ds.theard.WorkThread;
 
 public class BitmapGetter {
 	private static final boolean DEBUG_PERFORMANCE = false;
@@ -141,6 +143,28 @@ public class BitmapGetter {
 
 	public interface BitmapGotCallBack {
 		public void onBitmapGot(Bitmap aBitmap);
+	}
+	
+	public static String saveBitmap2Sdcard(String aDirPath, Bitmap bitmap) {
+		String filePath = null;
+		try {
+			ByteArrayOutputStream out = new ByteArrayOutputStream();
+			bitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
+			out.flush();
+			out.close();
+
+			long time = System.currentTimeMillis();
+			filePath = aDirPath + "/" + time;
+			FileOutputStream fos = new FileOutputStream(filePath);
+			fos.write(out.toByteArray());
+			fos.flush();
+			fos.close();
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			return filePath;
+		}
+		return filePath;
 	}
 
 }
