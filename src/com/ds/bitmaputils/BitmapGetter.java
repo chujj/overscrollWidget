@@ -3,6 +3,7 @@ package com.ds.bitmaputils;
 import java.net.URL;
 import java.util.HashMap;
 
+import com.ds.io.DsLog;
 import com.ds.theard.WorkThread;
 
 import android.graphics.Bitmap;
@@ -61,14 +62,14 @@ public class BitmapGetter {
 			if (getInstance().mFetchTask.containsKey(aUrl)) {
 				getInstance().mFetchTask.put(aUrl, aCallback);
 			} else {
-				mylog("zhujj: " + aUrl);
+				DsLog.e("zhujj: " + aUrl);
 				getInstance().fetchBitmapOnNet(aUrl, aCallback);
 			}
 		}
 		if (DEBUG_PERFORMANCE) {
-			mylog(">>>>>>>>>>>>>>>>>>>>>");
+			DsLog.e(">>>>>>>>>>>>>>>>>>>>>");
 			getInstance().mWorkHandler.dump(getInstance().mTheradprint, "count-dump");
-			mylog("<<<<<<<<<<<<<<<<<<<<<");
+			DsLog.e("<<<<<<<<<<<<<<<<<<<<<");
 		}
 		return retval;
 	}
@@ -141,8 +142,5 @@ public class BitmapGetter {
 	public interface BitmapGotCallBack {
 		public void onBitmapGot(Bitmap aBitmap);
 	}
-	
-	private static void mylog(String aMsg) {
-		System.out.println(aMsg);
-	}
+
 }

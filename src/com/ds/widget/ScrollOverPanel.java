@@ -9,12 +9,13 @@ import android.os.Looper;
 import android.os.Message;
 import android.os.SystemClock;
 import android.os.Vibrator;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.VelocityTracker;
 import android.view.View;
 import android.view.ViewConfiguration;
 import android.widget.Scroller;
+
+import com.ds.io.DsLog;
 
 public class ScrollOverPanel extends View {
 	private final static int LONG_CLICK_TICK = 600;
@@ -103,7 +104,7 @@ public class ScrollOverPanel extends View {
 		}
 
 		if (mTouchState == TouchState.AUTO && this.mScroller.isFinished()) {
-			mylog("last frame");
+			DsLog.e("last frame");
 			mTouchState = TouchState.REST;
 			rollbackIfOverScroll();
 		}
@@ -261,7 +262,7 @@ public class ScrollOverPanel extends View {
 	}
 
 	final private void playScorllAnimation(int aDy, int aDuring) {
-		mylog(aDy + " || t: " + aDuring);
+		DsLog.e(aDy + " || t: " + aDuring);
 		if (Math.abs(aDy) < 10) {
 			aDuring = 0;
 		}
@@ -293,13 +294,13 @@ public class ScrollOverPanel extends View {
 		mCurrOffsetY = getLimitedValue(temp, min, max);
 		
 		if (mTouchState == TouchState.AUTO && hitBufferedRangeLedge) { // if auto anim, stop continue scroll
-			mylog("auto anim && hit range");
+			DsLog.e("auto anim && hit range");
 			mScroller.forceFinished(true);
 		}
 	}
 
 	private void onOverBottom() {
-		mylog("onOverBottom");
+		DsLog.e("onOverBottom");
 		if (mModel != null && !mBottomAction.isBottomAcitonProcess) {
 			mBottomAction.isBottomAcitonProcess = true;
 			mModel.onOverBottom(mBottomAction);
@@ -307,7 +308,7 @@ public class ScrollOverPanel extends View {
 	}
 
 	private void onOverTop() {
-		mylog("onOverTop");
+		DsLog.e("onOverTop");
 		if (mModel != null && !mTopAction.isTopAcitonProcess) {
 			mTopAction.isTopAcitonProcess = true;
 			mModel.onOverTop(mTopAction);
@@ -415,9 +416,5 @@ public class ScrollOverPanel extends View {
 		public void keyUpCancel();
 		public void onClick();
 		public boolean onLongClick();
-	}
-
-	public static final void mylog(String aMsg) {
-		Log.e(ScrollOverPanel.class.getSimpleName(), aMsg);
 	}
 }

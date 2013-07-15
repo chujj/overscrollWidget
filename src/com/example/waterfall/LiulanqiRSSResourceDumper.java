@@ -7,6 +7,8 @@ import java.net.URL;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import com.ds.io.DsLog;
+
 public class LiulanqiRSSResourceDumper {
 	/*
 	http://shahe.baidu.com/rssfeed/fetch.php?type=entry_list&imglistonly=1&channel=EN_2085&num=50&dir=up
@@ -50,7 +52,7 @@ http://rss.cbs.baidu.com/rssfeed/fetch.php?type=entry_list&imglistonly=1&channel
 	
 	private void dumpGroup(BitmapGroupBean[] aGroup) {
 		for (int i = 0; i < aGroup.length; i++) {
-			mylog(aGroup[i].toString());
+			DsLog.e(aGroup[i].toString());
 		}
 	}
 	
@@ -93,10 +95,6 @@ http://rss.cbs.baidu.com/rssfeed/fetch.php?type=entry_list&imglistonly=1&channel
 		
 		return retval;
 	}
-
-	private static void mylog(String tag) {
-		System.out.println(tag);
-	}
 	
 	private BitmapGroupBean[] parseNetData(String aData) {
 		BitmapGroupBean[] retval = null;
@@ -130,7 +128,7 @@ http://rss.cbs.baidu.com/rssfeed/fetch.php?type=entry_list&imglistonly=1&channel
 					group.setupSize(size);
 				}
 				
-				mylog("ok1");
+				DsLog.e("ok1");
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
