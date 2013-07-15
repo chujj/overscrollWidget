@@ -3,6 +3,7 @@ package com.example.waterfall;
 import android.app.Activity;
 import android.os.Bundle;
 import android.view.ViewGroup;
+import bdad.AdContainer;
 
 import com.ds.bitmaputils.BitmapGetter;
 import com.ds.pictureviewer.data.PicturesDatabaseOperator;
@@ -12,7 +13,8 @@ import com.ds.widget.ScrollOverPanel.IModel;
 
 public class MainActivity extends Activity {
 
-	static ScrollOverPanel mPanel;
+	static AdContainer sRootView;
+	static ScrollOverPanel sPanel;
 	private ColumnListView mModel;
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -22,21 +24,16 @@ public class MainActivity extends Activity {
 		WorkThread.init();
 		BitmapGetter.setCacheFileDir(this.getFilesDir().getAbsolutePath());
 
-		if (mPanel == null) {
+		if (sPanel == null) {
 			mModel = new ColumnListView(this);
-			mPanel = (new ScrollOverPanel(this, mModel));
-			mModel.setDisplayingView(mPanel);
+			sPanel = (new ScrollOverPanel(this, mModel));
+			mModel.setDisplayingView(sPanel);
+			
+			sRootView = new AdContainer(this);
+			sRootView.setBottomView(sPanel);
 		}
 
-		this.setContentView(mPanel);
-	}
-
-	@Override
-	protected void onDestroy() {
-		super.onDestroy();
-		
-		
-		((ViewGroup) mPanel.getParent()).removeView(mPanel);
+		this.setContentView(sRootView);
 	}
 
 }
