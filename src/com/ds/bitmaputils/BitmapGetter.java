@@ -145,7 +145,15 @@ public class BitmapGetter {
 		public void onBitmapGot(Bitmap aBitmap);
 	}
 	
-	public static String saveBitmap2Sdcard(String aDirPath, Bitmap bitmap) {
+	public interface BitmapTask {
+		public Object getTaskKey();
+		public String getNetUrl();
+		public String getFileSystemPath();
+		public void saveNetUrl(String aUrl);
+		public void saveFileSystemPath(String aPath);
+	}
+	
+	private static String saveBitmap2Sdcard(String aDirPath, Bitmap bitmap) {
 		String filePath = null;
 		try {
 			ByteArrayOutputStream out = new ByteArrayOutputStream();
