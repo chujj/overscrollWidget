@@ -7,22 +7,22 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 import com.ds.io.DsLog;
 
-class PicturesSQLOpenHelper extends SQLiteOpenHelper {
+public class PicturesSQLOpenHelper extends SQLiteOpenHelper {
 	private static final String DB_NAME = "pictures.db";
 	protected static final String DB_TABLE = "cover";
 
 	private static final int DB_VERSION = 1;
 
 	/** field */
-	static final String COLUMN_ID = "_id";
-	static final String COLUMN_INDEX_KEY = "index"; // int
-	static final String COLUMN_COVER_BITMAP_URL_KEY = "img"; // String
-	static final String COLUMN_DESCRIPT_KEY = "title"; // String
-	static final String COLUMN_DATE_KEY = "date"; // String
-	static final String COLUMN_COVER_BITMAP_SIZE_KEY = "imgsize"; // String
-	static final String COLUMN_CHILDREN_KEY = "link"; // String
-	static final String COLUMN_CHILDREN_COUNT_KEY = "arraysize"; // String
-	static final String COLUMN_LOCAL_FLIE = "localfile"; // String
+	public static final String COLUMN_ID = "_id";
+	public static final String COLUMN_INDEX_KEY = "server_index"; // int
+	public static final String COLUMN_COVER_BITMAP_URL_KEY = "img"; // String
+	public static final String COLUMN_DESCRIPT_KEY = "title"; // String
+	public static final String COLUMN_DATE_KEY = "date"; // String
+	public static final String COLUMN_COVER_BITMAP_SIZE_KEY = "imgsize"; // String
+	public static final String COLUMN_CHILDREN_KEY = "link"; // String
+	public static final String COLUMN_CHILDREN_COUNT_KEY = "arraysize"; // String
+	public static final String COLUMN_LOCAL_FLIE = "localfile"; // String
 
 	/** end of field */
 	

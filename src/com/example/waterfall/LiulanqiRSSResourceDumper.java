@@ -3,41 +3,67 @@ package com.example.waterfall;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.Iterator;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import android.content.ContentValues;
+import android.database.Cursor;
+
 import com.ds.io.DsLog;
+import com.ds.pictureviewer.data.PicturesDatabaseOperator;
+import com.ds.pictureviewer.data.PicturesSQLOpenHelper;
 
 public class LiulanqiRSSResourceDumper {
 	/*
 	http://shahe.baidu.com/rssfeed/fetch.php?type=entry_list&imglistonly=1&channel=EN_2085&num=50&dir=up
 
-{img -> cover
-     title -> descript
- link -> detail some pictures}
-
 http://rss.cbs.baidu.com/rssfeed/fetch.php?type=entry_list&imglistonly=1&channel=EN_0&num=50&dir=up
 http://rss.cbs.baidu.com/rssfeed/fetch.php?type=entry_list&imglistonly=1&channel=EN_2191&num=50&dir=down
-http://rss.cbs.baidu.com/rssfeed/fetch.php?type=entry_list&imglistonly=1&channel=EN_2176&num=50&dir=down
-http://rss.cbs.baidu.com/rssfeed/fetch.php?type=entry_list&imglistonly=1&channel=EN_2161&num=50&dir=down
-
-*/
+	 */
 	private final static String  DEFAULT_QUERY_URL = "http://rss.cbs.baidu.com/rssfeed/fetch.php?type=entry_list&imglistonly=1&channel=EN_0&num=50&dir=up";
 	private final static int BUFFER_LENGTH = 500;
+	
+	private PicturesDatabaseOperator mDBOperator;
 	private ByteArrayOutputStream mBuffer;
 	private byte[] buffer;
 	private int mBottomIdx, mTopIdx;
+	private ColumnListView mModel;
 	
-	public LiulanqiRSSResourceDumper() {
+	public LiulanqiRSSResourceDumper(ColumnListView aModel) {
+		mModel = aModel; 
 		buffer = new byte[BUFFER_LENGTH];
 		mBuffer = new ByteArrayOutputStream();
+		mDBOperator = PicturesDatabaseOperator.getIntance();
 	}
 
-	public BitmapGroupBean[] firstQuery() {
-		BitmapGroupBean[] retval = parseNetData(queryNet(DEFAULT_QUERY_URL));
+	public BitmapGroupBean[] firstQuery(int aStartId) {
+		BitmapGroupBean[] retval = null;
+		
+		// read db accord server_id first
+		Cursor cr = mDBOperator.queryDown(aStartId);
+		if (cr.getCount() > 0) {
+			cr.moveToFirst();
+			retval = new BitmapGroupBean[cr.getCount()];
+			int i = 0;
+			while (!cr.isAfterLast()) {
+				BitmapGroupBean bean = new BitmapGroupBean(mDBOperator, cr);
+
+				retval[i++] = bean;
+				cr.moveToNext();
+			}
+		} else {
+			retval = parseNetData(queryNet(DEFAULT_QUERY_URL));
+			for (BitmapGroupBean bitmapGroupBean : retval) {
+				bitmapGroupBean.insertToDb(mDBOperator);
+			}
+			mModel.saveLastVisitIndex(retval[0].mIdx);
+		}
+		
 		mTopIdx = retval[0].mIdx;
 		mBottomIdx = retval[retval.length - 1].mIdx;
+		
 		dumpGroup(retval);
 		return retval;
 	}
@@ -168,10 +194,37 @@ http://rss.cbs.baidu.com/rssfeed/fetch.php?type=entry_list&imglistonly=1&channel
 			mH = h;
 		}
 
+		public void insertToDb(PicturesDatabaseOperator aDBOperator) {
+			ContentValues cv = new ContentValues();
+			cv.put(PicturesSQLOpenHelper.COLUMN_CHILDREN_KEY, mChildren);
+			cv.put(PicturesSQLOpenHelper.COLUMN_CHILDREN_COUNT_KEY, mChoildrenCount);
+			cv.put(PicturesSQLOpenHelper.COLUMN_DATE_KEY, mDate);
+			cv.put(PicturesSQLOpenHelper.COLUMN_COVER_BITMAP_URL_KEY, mCoverUrl);
+			cv.put(PicturesSQLOpenHelper.COLUMN_DESCRIPT_KEY, mDescript);
+			cv.put(PicturesSQLOpenHelper.COLUMN_INDEX_KEY, mIdx);
+			cv.put(PicturesSQLOpenHelper.COLUMN_COVER_BITMAP_SIZE_KEY, mW + "," + mH);
+			
+			aDBOperator.insert(cv);
+		}
+
 		@Override
 		public String toString() {
 			
 			return mIdx + mDescript +  " count: "+ mChoildrenCount + " size: " + mW + "|"+ mH;
+		}
+		
+		public BitmapGroupBean() {
+			
+		}
+		public BitmapGroupBean(PicturesDatabaseOperator aDBOperator, Cursor aCv) {
+			this.mChildren = aDBOperator.getCursorStringValue(aCv, PicturesSQLOpenHelper.COLUMN_CHILDREN_KEY);
+			this.mChoildrenCount = aDBOperator.getCursorIntValue(aCv, PicturesSQLOpenHelper.COLUMN_CHILDREN_COUNT_KEY);
+			this.mDate = aDBOperator.getCursorStringValue(aCv, PicturesSQLOpenHelper.COLUMN_DATE_KEY);
+			this.mCoverUrl = aDBOperator.getCursorStringValue(aCv, PicturesSQLOpenHelper.COLUMN_COVER_BITMAP_URL_KEY);
+			this.mDescript = aDBOperator.getCursorStringValue(aCv, PicturesSQLOpenHelper.COLUMN_DESCRIPT_KEY);
+			this.mIdx = aDBOperator.getCursorIntValue(aCv, PicturesSQLOpenHelper.COLUMN_INDEX_KEY);
+			String size = aDBOperator.getCursorStringValue(aCv, PicturesSQLOpenHelper.COLUMN_COVER_BITMAP_SIZE_KEY);
+			this.setupSize(size);
 		}
 	}
 	
