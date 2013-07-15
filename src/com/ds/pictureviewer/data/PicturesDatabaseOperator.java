@@ -58,8 +58,8 @@ public class PicturesDatabaseOperator {
 		return cr;
 	}
 
-	public void update(int id, ContentValues cv) {
-		String where = PicturesSQLOpenHelper.COLUMN_ID + " == '" + id + "'";
+	public void update(int aServerIdx, ContentValues cv) {
+		String where = PicturesSQLOpenHelper.COLUMN_INDEX_KEY + " == '" + aServerIdx + "'";
 		mSqlDbSync.update(mDbTabName, cv, where, null);
 	}
 	

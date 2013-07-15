@@ -11,6 +11,7 @@ import org.json.JSONObject;
 import android.content.ContentValues;
 import android.database.Cursor;
 
+import com.ds.bitmaputils.BitmapGetter.BitmapTask;
 import com.ds.io.DsLog;
 import com.ds.pictureviewer.data.PicturesDatabaseOperator;
 import com.ds.pictureviewer.data.PicturesSQLOpenHelper;
@@ -163,7 +164,7 @@ http://rss.cbs.baidu.com/rssfeed/fetch.php?type=entry_list&imglistonly=1&channel
 		return retval;
 	}
 	
-	public static class BitmapGroupBean {
+	public class BitmapGroupBean implements BitmapTask {
 		private static final String index_key = "index";
 		private static final String descript_key = "title";
 		private static final String cover_bitmap_url_key = "img";
@@ -176,6 +177,7 @@ http://rss.cbs.baidu.com/rssfeed/fetch.php?type=entry_list&imglistonly=1&channel
 		String mDescript;
 		String mCoverUrl;
 		String mDate;
+		String mLocalFile;
 		int mIdx;
 		int mChoildrenCount;
 		int mW, mH;
@@ -203,6 +205,7 @@ http://rss.cbs.baidu.com/rssfeed/fetch.php?type=entry_list&imglistonly=1&channel
 			cv.put(PicturesSQLOpenHelper.COLUMN_DESCRIPT_KEY, mDescript);
 			cv.put(PicturesSQLOpenHelper.COLUMN_INDEX_KEY, mIdx);
 			cv.put(PicturesSQLOpenHelper.COLUMN_COVER_BITMAP_SIZE_KEY, mW + "," + mH);
+			cv.put(PicturesSQLOpenHelper.COLUMN_LOCAL_FLIE, mLocalFile);
 			
 			aDBOperator.insert(cv);
 		}
@@ -225,6 +228,36 @@ http://rss.cbs.baidu.com/rssfeed/fetch.php?type=entry_list&imglistonly=1&channel
 			this.mIdx = aDBOperator.getCursorIntValue(aCv, PicturesSQLOpenHelper.COLUMN_INDEX_KEY);
 			String size = aDBOperator.getCursorStringValue(aCv, PicturesSQLOpenHelper.COLUMN_COVER_BITMAP_SIZE_KEY);
 			this.setupSize(size);
+			this.mLocalFile = aDBOperator.getCursorStringValue(aCv, PicturesSQLOpenHelper.COLUMN_LOCAL_FLIE);
+		}
+
+		@Override
+		public Object getTaskKey() {
+			return mCoverUrl;
+		}
+
+		@Override
+		public String getNetUrl() {
+			return mCoverUrl;
+		}
+
+		@Override
+		public String getFileSystemPath() {
+			// TODO Auto-generated method stub
+			return mLocalFile;
+		}
+
+		@Override
+		public void saveNetUrl(String aUrl) {
+			throw new RuntimeException("no implements");
+		}
+
+		@Override
+		public void saveFileSystemPath(String aPath) {
+			mLocalFile = aPath;
+			ContentValues cv = new ContentValues();
+			cv.put(PicturesSQLOpenHelper.COLUMN_LOCAL_FLIE, aPath);
+			mDBOperator.update(this.mIdx, cv);
 		}
 	}
 	

@@ -344,7 +344,7 @@ public class ColumnListView implements IModel {
 			
 			if (mRect.top > aEnd || mRect.bottom < aStart) {
 				mBitmap = null;
-				BitmapGetter.releaseBitmap(mGroup.mCoverUrl);
+				BitmapGetter.releaseBitmap(mGroup);
 				return;
 			}
 			mRect.offset(0, aOffset);
@@ -358,7 +358,7 @@ public class ColumnListView implements IModel {
 				aCanvas.drawBitmap(mBitmap, null, mRect, null);
 			} else {
 				mBitmap = BitmapGetter.tryGetBitmapFromUrlOrCallback(
-						mGroup.mCoverUrl, new BitmapGotCallBack() {
+						mGroup, new BitmapGotCallBack() {
 							@Override
 							public void onBitmapGot(Bitmap aBitmap) {
 								mBitmap = aBitmap;

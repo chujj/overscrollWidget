@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.view.ViewGroup;
 
+import com.ds.bitmaputils.BitmapGetter;
 import com.ds.pictureviewer.data.PicturesDatabaseOperator;
 import com.ds.theard.WorkThread;
 import com.ds.widget.ScrollOverPanel;
@@ -19,6 +20,7 @@ public class MainActivity extends Activity {
 		
 		PicturesDatabaseOperator.init(this.getApplicationContext());
 		WorkThread.init();
+		BitmapGetter.setCacheFileDir(this.getFilesDir().getAbsolutePath());
 
 		if (mPanel == null) {
 			mModel = new ColumnListView(this);

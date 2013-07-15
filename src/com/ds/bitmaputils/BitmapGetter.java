@@ -19,12 +19,13 @@ import com.ds.theard.WorkThread;
 public class BitmapGetter {
 	private static final boolean DEBUG_PERFORMANCE = false;
 	private static BitmapGetter sInstance;
+	private static String sCacheDirPath;
 	
 	private WorkHandler mWorkHandler;
 	private UIHandler mUIHandler;
 	
-	private HashMap<String, Bitmap> mBitmapCache;
-	private HashMap<String, BitmapGotCallBack> mFetchTask;
+	private HashMap<Object, Bitmap> mBitmapCache;
+	private HashMap<Object, BitmapGotCallBack> mFetchTask;
 	private static synchronized BitmapGetter getInstance() {
 		if (sInstance == null) {
 			sInstance = new BitmapGetter();
@@ -36,36 +37,39 @@ public class BitmapGetter {
 	private BitmapGetter() {
 		mWorkHandler = new WorkHandler();
 		mUIHandler = new UIHandler();
-		mBitmapCache = new HashMap<String, Bitmap>();
-		mFetchTask = new HashMap<String, BitmapGotCallBack>();
+		mBitmapCache = new HashMap<Object, Bitmap>();
+		mFetchTask = new HashMap<Object, BitmapGotCallBack>();
 		mTheradprint = new LogPrinter(android.util.Log.ERROR, "count-dump");
 	}
 
+	public static void setCacheFileDir(String aDirPath) {
+		sCacheDirPath = aDirPath;
+	}
 	
-	public static void releaseBitmap(String aUrl) {
+	public static void releaseBitmap(BitmapTask aTask) {
 		BitmapGetter instance = getInstance();
-		Bitmap release = instance.mBitmapCache.get(aUrl);
+		Bitmap release = instance.mBitmapCache.get(aTask.getTaskKey());
 		if (release != null) {
 			release.recycle();
-			instance.mBitmapCache.remove(aUrl);
-			instance.releasPending(aUrl);
+			instance.mBitmapCache.remove(aTask.getTaskKey());
+			instance.releasPending(aTask);
 		}
 	}
 	
-	final private void releasPending(String aUrl) {
-		mWorkHandler.removeCallbacksAndMessages(aUrl);
+	final private void releasPending(BitmapTask aTask) {
+		mWorkHandler.removeCallbacksAndMessages(aTask);
 	}
 	
-	public static Bitmap tryGetBitmapFromUrlOrCallback(String aUrl, BitmapGotCallBack aCallback) {
+	public static Bitmap tryGetBitmapFromUrlOrCallback(BitmapTask aTask, BitmapGotCallBack aCallback) {
 		
 		
-		Bitmap retval = getInstance().getCachedBitmap(aUrl);
+		Bitmap retval = getInstance().getCachedBitmap(aTask.getTaskKey());
 		if (retval == null) {
-			if (getInstance().mFetchTask.containsKey(aUrl)) {
-				getInstance().mFetchTask.put(aUrl, aCallback);
+			if (getInstance().mFetchTask.containsKey(aTask.getTaskKey())) {
+				getInstance().mFetchTask.put(aTask.getTaskKey(), aCallback);
 			} else {
-				DsLog.e("zhujj: " + aUrl);
-				getInstance().fetchBitmapOnNet(aUrl, aCallback);
+				DsLog.e("zhujj: " + aTask.getTaskKey());
+				getInstance().fetchBitmapOnNet(aTask, aCallback);
 			}
 		}
 		if (DEBUG_PERFORMANCE) {
@@ -76,33 +80,65 @@ public class BitmapGetter {
 		return retval;
 	}
 	
-	private Bitmap getCachedBitmap(String aUrl) {
-		return mBitmapCache.get(aUrl);
+	private Bitmap getCachedBitmap(Object aKey) {
+		return mBitmapCache.get(aKey);
 	}
 	
-	private void fetchBitmapOnNet(String aUrl, BitmapGotCallBack aCallBack) {
-		mFetchTask.put(aUrl, aCallBack);
+	private void fetchBitmapOnNet(BitmapTask aTask, BitmapGotCallBack aCallBack) {
+		mFetchTask.put(aTask.getTaskKey(), aCallBack);
 		Message.obtain(getInstance().mWorkHandler,
-				WorkHandler.MSG_FETCH_BITMAP_ON_NET, aUrl).sendToTarget();
+				WorkHandler.MSG_FETCH_BITMAP, aTask).sendToTarget();
 	}
 	
 	private static class WorkHandler extends Handler {
-		public final static int MSG_FETCH_BITMAP_ON_NET = 0;
+		public final static int MSG_FETCH_BITMAP = 0;
 		public WorkHandler() {
 			super(WorkThread.getsWorkLooper());
 		}
 		@Override
 		public void handleMessage(Message msg) {
 			switch (msg.what) {
-			case MSG_FETCH_BITMAP_ON_NET:
-				Bitmap bitmap = getBitmapFromNet((String) msg.obj);
-				getInstance().mBitmapCache.put((String) msg.obj, bitmap);
-				Message.obtain(getInstance().mUIHandler, UIHandler.MSG_FETCH_BITMAP_DONE, msg.obj).sendToTarget();
+			case MSG_FETCH_BITMAP:
+				BitmapTask task = (BitmapTask) msg.obj;
+				Bitmap bitmap = null;
+				
+				// read local
+				bitmap = getBitmapFromFile(task);
+				
+				if (bitmap == null) {
+					//remote
+					bitmap = getBitmapFromNet(task.getNetUrl());
+					if (bitmap != null) {
+						String path2File = saveBitmapToFile(task, bitmap);
+						task.saveFileSystemPath(path2File);
+					}
+				}
+				getInstance().mBitmapCache.put(task.getTaskKey(), bitmap);
+				Message.obtain(getInstance().mUIHandler, UIHandler.MSG_FETCH_BITMAP_DONE, task).sendToTarget();
 				break;
 
 			default:
 				break;
 			}
+		}
+		
+		private String saveBitmapToFile(BitmapTask aTask, Bitmap aBitmap) {
+			if (aBitmap == null) {
+				return null;
+			}
+			
+			return saveBitmap2Sdcard(sCacheDirPath, aBitmap);
+		}
+		private Bitmap getBitmapFromFile(BitmapTask aTask) {
+			Bitmap retval = null;
+			try {
+				if (aTask.getFileSystemPath() != null) {
+					retval = BitmapFactory.decodeFile(aTask.getFileSystemPath());
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			return retval;
 		}
 		
 		private Bitmap getBitmapFromNet(String aUrl) {
@@ -127,11 +163,12 @@ public class BitmapGetter {
 		public void handleMessage(Message msg) {
 			switch (msg.what) {
 			case MSG_FETCH_BITMAP_DONE:
-				if (getInstance().mFetchTask.containsKey(msg.obj)) {
-					BitmapGotCallBack run = getInstance().mFetchTask.get(msg.obj);
-					getInstance().mFetchTask.remove(msg.obj);
+				BitmapTask task = (BitmapTask) msg.obj;
+				if (getInstance().mFetchTask.containsKey(task.getTaskKey())) {
+					BitmapGotCallBack run = getInstance().mFetchTask.get(task.getTaskKey());
+					getInstance().mFetchTask.remove(task.getTaskKey());
 					if (run != null)
-						run.onBitmapGot(getInstance().mBitmapCache.get(msg.obj));
+						run.onBitmapGot(getInstance().mBitmapCache.get(task.getTaskKey()));
 				}
 				break;
 
@@ -155,6 +192,10 @@ public class BitmapGetter {
 	
 	private static String saveBitmap2Sdcard(String aDirPath, Bitmap bitmap) {
 		String filePath = null;
+		if (aDirPath == null) {
+			return filePath;
+		}
+		
 		try {
 			ByteArrayOutputStream out = new ByteArrayOutputStream();
 			bitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
