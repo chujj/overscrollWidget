@@ -31,9 +31,8 @@ public class MainActivity extends Activity {
 			
 			sRootView = new AdContainer(this);
 			sRootView.setBottomView(sPanel);
+
+			this.setContentView(sRootView);
 		}
-
-		this.setContentView(sRootView);
 	}
-
 }
