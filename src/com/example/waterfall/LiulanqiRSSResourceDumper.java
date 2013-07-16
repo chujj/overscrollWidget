@@ -23,7 +23,17 @@ public class LiulanqiRSSResourceDumper {
 http://rss.cbs.baidu.com/rssfeed/fetch.php?type=entry_list&imglistonly=1&channel=EN_0&num=50&dir=up
 http://rss.cbs.baidu.com/rssfeed/fetch.php?type=entry_list&imglistonly=1&channel=EN_2191&num=50&dir=down
 	 */
-	private final static String  DEFAULT_QUERY_URL = "http://rss.cbs.baidu.com/rssfeed/fetch.php?type=entry_list&imglistonly=1&channel=EN_0&num=50&dir=up";
+//	private final static String  DEFAULT_QUERY_URL = "http://rss.cbs.baidu.com/rssfeed/fetch.php?type=entry_list&imglistonly=1&channel=EN_0&num=50&dir=up";
+	
+	/**
+	 * 第一版设置初始图片max为 PICTURE_MAX_LIMIT。 直接投放app市场，通过查看统计结论，
+	 * 试试水 
+	 */
+	private final static int PICTURE_MAX_LIMIT = 1000;
+	private final static String  DEFAULT_QUERY_URL = 
+			"http://rss.cbs.baidu.com/rssfeed/fetch.php?type=entry_list&imglistonly=1&channel=EN_" + PICTURE_MAX_LIMIT + "&num=50" + 
+			"&dir=down";
+	
 	private final static int BUFFER_LENGTH = 500;
 	
 	private PicturesDatabaseOperator mDBOperator;
