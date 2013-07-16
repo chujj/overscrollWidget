@@ -8,6 +8,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.ColorFilter;
 import android.graphics.Paint;
+import android.graphics.Paint.Style;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.os.Handler;
@@ -266,20 +267,14 @@ public class ColumnListView implements IModel {
 		// TODO Auto-generated method stub
 		
 	}
-	
-	public static SparseArray sBitmapMap = new SparseArray<Bitmap>();
-	private static Bitmap getBitmap(Context context, int aResId) {
-		if (sBitmapMap.get(aResId) != null) {
-			return (Bitmap) sBitmapMap.get(aResId);
-		}
-		Bitmap bitmap = BitmapFactory.decodeResource(context.getResources(), aResId);
-		sBitmapMap.put(aResId, bitmap);
-		
-		return bitmap;
-	}
-	private static Paint mPressedPaint, mBgPaint;
-	public class ItemDrawable extends Drawable implements IModelItem {
 
+	private static Paint mPressedPaint, mBgPaint, mBorderPaint, mTextPaint;
+	public class ItemDrawable extends Drawable implements IModelItem {
+		private static final int UI_BORDER_MARGIN = 20;
+		private static final int UI_BG_COLOR = 0xfff7f7f7;
+		private static final int UI_PRESS_COLOR = 0xff0000ff;
+		private static final int UI_TEXT_COLOR = 0xff000000;
+		
 		private BitmapGroupBean mGroup;
 		Bitmap mBitmap;
 		int mHeight, mWidth;
@@ -289,21 +284,6 @@ public class ColumnListView implements IModel {
 		Rect mRect;
 		private boolean mIsClicked;
 
-		public ItemDrawable(Context context, int aResId) {
-			mBitmap = getBitmap(context, aResId);
-			mHeight = mBitmap.getHeight();
-			mWidth = mBitmap.getWidth();
-			mRect = new Rect();
-			setMargin(0);
-			mIsClicked = false;
-			if (mPressedPaint == null) {
-				mPressedPaint = new Paint();
-				mPressedPaint.setColor(0xff0000ff);
-				mBgPaint = new Paint();
-				mBgPaint.setColor(0xff00aa00);
-			}
-		}
-		
 		public ItemDrawable(Context context, BitmapGroupBean aGroup) {
 			mHeight = aGroup.mH;
 			mWidth = aGroup.mW;
@@ -313,9 +293,19 @@ public class ColumnListView implements IModel {
 			mIsClicked = false;
 			if (mPressedPaint == null) {
 				mPressedPaint = new Paint();
-				mPressedPaint.setColor(0xff0000ff);
+				mPressedPaint.setColor(UI_PRESS_COLOR);
+				
 				mBgPaint = new Paint();
-				mBgPaint.setColor(0xff00aa00);
+				mBgPaint.setColor(UI_BG_COLOR);
+				
+				mBorderPaint = new Paint();
+				mBorderPaint.setColor(0xff000000);
+				mBorderPaint.setStyle(Style.STROKE);
+				
+				mTextPaint = new Paint();
+				mTextPaint.setAntiAlias(true);
+				mTextPaint.setTextSize(UI_BORDER_MARGIN);
+				mTextPaint.setColor(UI_TEXT_COLOR);
 			}
 		}
 
@@ -334,7 +324,7 @@ public class ColumnListView implements IModel {
 			mTop = top; 
 			mRight = right;
 			mBottom = bottom;
-			setMargin(5);
+			setMargin(UI_BORDER_MARGIN);
 		}
 
 		@Override
@@ -349,10 +339,11 @@ public class ColumnListView implements IModel {
 			}
 			mRect.offset(0, aOffset);
 			
+			aCanvas.drawRect(mRect, mBorderPaint);
 			if (mIsClicked) {
 				aCanvas.drawRect(mRect, mPressedPaint);
 			}
-			mRect.inset(5, 5);
+			mRect.inset(UI_BORDER_MARGIN, UI_BORDER_MARGIN);
 			aCanvas.drawRect(mRect, mBgPaint);
 			if (mBitmap != null) {
 				aCanvas.drawBitmap(mBitmap, null, mRect, null);
@@ -365,6 +356,10 @@ public class ColumnListView implements IModel {
 								ColumnListView.this.refreshUI();
 							}
 						});
+			}
+			
+			if (mGroup.mDescript != null) {
+				aCanvas.drawText(mGroup.mDescript, mRect.left, mBottom + aOffset, mTextPaint);
 			}
 		}
 
