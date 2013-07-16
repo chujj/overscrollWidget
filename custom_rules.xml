@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="custom_rules" default="-pre-build">
+  <target name="-pre-build">
+
+    <echo level="info"> Copy reslibs/armeabi/libflyflowjni_release_V1_0_0_0.so 
+    to libs/armeabi/libflyflowjni.so</echo>
+    <copy file="reslibs/armeabi/libdsjni.so" 
+	  tofile="libs/armeabi/libdsjni.so" overwrite="true" failonerror="true" />
+  </target>
+</project>
