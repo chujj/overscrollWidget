@@ -1,19 +1,17 @@
 package bdad;
 
-import org.json.JSONObject;
-
 import android.content.Context;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 
 import com.baidu.mobads.AdSettings;
 import com.baidu.mobads.AdView;
-import com.baidu.mobads.AdViewListener;
 
 public class AdContainer extends ViewGroup {
 
 	private AdView mAdView;
+	private AdDisplayControl mControl;
+	
 	public AdContainer(Context context) {
 		super(context);
 		buildAdView(context);
@@ -32,60 +30,9 @@ public class AdContainer extends ViewGroup {
 		});
 		
 		mAdView = new AdView(context);
-		mAdView.setListener(new AdViewListener() {
-
-			public void onAdSwitch() {
-				Log.w("", "onAdSwitch");
-			}
-
-			public void onAdShow(JSONObject info) {
-				Log.w("", "onAdShow " + info.toString());
-			}
-
-			public void onAdReady(AdView adView) {
-				Log.w("", "onAdReady " + adView);
-			}
-
-			public void onAdFailed(String reason) {
-				Log.w("", "onAdFailed " + reason);
-			}
-
-			public void onAdClick(JSONObject info) {
-				Log.w("", "onAdClick " + info.toString());
-			}
-
-			public void onVideoStart() {
-				Log.w("", "onVideoStart");
-			}
-
-			public void onVideoFinish() {
-				Log.w("", "onVideoFinish");
-			}
-
-			@Override
-			public void onVideoClickAd() {
-				Log.w("", "onVideoFinish");
-
-			}
-
-			@Override
-			public void onVideoClickClose() {
-				Log.w("", "onVideoFinish");
-
-			}
-
-			@Override
-			public void onVideoClickReplay() {
-				Log.w("", "onVideoFinish");
-
-			}
-
-			@Override
-			public void onVideoError() {
-				Log.w("", "onVideoFinish");
-
-			}
-		});
+		mControl = new AdDisplayControl(mAdView);
+		mControl.hideAd();
+		
 		
 	}
 	
