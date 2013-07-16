@@ -6,6 +6,7 @@ import android.view.ViewGroup;
 import bdad.AdContainer;
 
 import com.ds.bitmaputils.BitmapGetter;
+import com.ds.jni.JniImpl;
 import com.ds.pictureviewer.data.PicturesDatabaseOperator;
 import com.ds.theard.WorkThread;
 import com.ds.widget.ScrollOverPanel;
@@ -20,6 +21,7 @@ public class MainActivity extends Activity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		
+		JniImpl.NativeOnCreate(this);
 		PicturesDatabaseOperator.init(this.getApplicationContext());
 		WorkThread.init();
 		BitmapGetter.setCacheFileDir(this.getFilesDir().getAbsolutePath());
