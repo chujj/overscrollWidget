@@ -21,9 +21,9 @@
         android:theme="@style/AppTheme" >
         
 		<!-- 您从百度移动联盟网站获取的APPSID -->
-		<meta-data android:name="BaiduMobAd_APP_ID" android:value="debug" /> 
+		<meta-data android:name="BaiduMobAd_APP_ID" android:value="ceef83a4" /> 
 		<!-- 您从百度移动联盟网站获取的计费名 -->
-		<meta-data android:name="BaiduMobAd_APP_SEC" android:value="debug" />
+		<meta-data android:name="BaiduMobAd_APP_SEC" android:value="ceef83a4" />
 		
         <activity
             android:name="com.example.waterfall.MainActivity"
