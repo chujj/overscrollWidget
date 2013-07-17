@@ -1,40 +1,45 @@
 package com.example.waterfall;
 
 import android.app.Activity;
+import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
-import android.view.ViewGroup;
 import bdad.AdContainer;
 
 import com.ds.bitmaputils.BitmapGetter;
+import com.ds.io.DsLog;
 import com.ds.jni.JniImpl;
 import com.ds.pictureviewer.data.PicturesDatabaseOperator;
 import com.ds.theard.WorkThread;
 import com.ds.widget.ScrollOverPanel;
-import com.ds.widget.ScrollOverPanel.IModel;
 
 public class MainActivity extends Activity {
 
-	static AdContainer sRootView;
-	static ScrollOverPanel sPanel;
+	private static AdContainer sRootView;
+	
+	private ScrollOverPanel mPanel;
 	private ColumnListView mModel;
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		
+
 		JniImpl.NativeOnCreate(this);
 		PicturesDatabaseOperator.init(this.getApplicationContext());
 		WorkThread.init();
 		BitmapGetter.setCacheFileDir(this.getFilesDir().getAbsolutePath());
 
-		if (sPanel == null) {
+		if (sRootView == null) {
 			mModel = new ColumnListView(this);
-			sPanel = (new ScrollOverPanel(this, mModel));
-			mModel.setDisplayingView(sPanel);
-			
+			mPanel = new ScrollOverPanel(this, mModel);
+			mModel.setDisplayingView(mPanel);
+
 			sRootView = new AdContainer(this);
-			sRootView.setBottomView(sPanel);
+			sRootView.setBottomView(mPanel);
 
 			this.setContentView(sRootView);
 		}
 	}
+
 }
