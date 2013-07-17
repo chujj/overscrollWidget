@@ -207,7 +207,8 @@ public class ColumnListView implements IModel {
 
 	@Override
 	public int hitWhichItem(int aX, int aY) {
-		return findHit(0, mItems.length - 1, aX, aY);
+		return 0;
+//		return findHit(0, mItems.length - 1, aX, aY);
 	}
 	
 	private int findHit(int aStart, int aEnd, int aX, int aY) {
@@ -274,6 +275,7 @@ public class ColumnListView implements IModel {
 		private static final int UI_BG_COLOR = 0xfff7f7f7;
 		private static final int UI_PRESS_COLOR = 0xff0000ff;
 		private static final int UI_TEXT_COLOR = 0xff000000;
+		private static final int UI_TEXT_BOTTOM_UP = 10;
 		
 		private BitmapGroupBean mGroup;
 		Bitmap mBitmap;
@@ -340,10 +342,11 @@ public class ColumnListView implements IModel {
 			mRect.offset(0, aOffset);
 			
 			aCanvas.drawRect(mRect, mBorderPaint);
-			if (mIsClicked) {
-				aCanvas.drawRect(mRect, mPressedPaint);
-			}
+//			if (mIsClicked) {
+//				aCanvas.drawRect(mRect, mPressedPaint);
+//			}
 			mRect.inset(UI_BORDER_MARGIN, UI_BORDER_MARGIN);
+			mRect.offset(0, -UI_BORDER_MARGIN);
 			aCanvas.drawRect(mRect, mBgPaint);
 			if (mBitmap != null) {
 				aCanvas.drawBitmap(mBitmap, null, mRect, null);
@@ -359,7 +362,7 @@ public class ColumnListView implements IModel {
 			}
 			
 			if (mGroup.mDescript != null) {
-				aCanvas.drawText(mGroup.mDescript, mRect.left, mBottom + aOffset, mTextPaint);
+				aCanvas.drawText(mGroup.mDescript, mRect.left, mBottom - UI_TEXT_BOTTOM_UP + aOffset, mTextPaint);
 			}
 		}
 
