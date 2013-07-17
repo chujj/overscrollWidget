@@ -52,8 +52,9 @@ public class BitmapGetter {
 		if (release != null) {
 			release.recycle();
 			instance.mBitmapCache.remove(aTask.getTaskKey());
-			instance.releasPending(aTask);
 		}
+		getInstance().mFetchTask.remove(aTask.getTaskKey());
+		instance.releasPending(aTask);
 	}
 	
 	final private void releasPending(BitmapTask aTask) {
