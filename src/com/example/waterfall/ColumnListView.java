@@ -20,6 +20,7 @@ import android.view.View;
 
 import com.ds.bitmaputils.BitmapGetter;
 import com.ds.bitmaputils.BitmapGetter.BitmapGotCallBack;
+import com.ds.io.DsLog;
 import com.ds.theard.WorkThread;
 import com.ds.widget.ScrollOverPanel.BottomActionDone;
 import com.ds.widget.ScrollOverPanel.IModel;
@@ -141,7 +142,7 @@ public class ColumnListView implements IModel {
 	
 	private void dumpAllItems() {
 		for (int i = 0; i < mItems.length; i++) {
-			Log.e("zhujj" , mItems[i].toString());
+			DsLog.e(mItems[i].toString());
 		}
 	}
 	
