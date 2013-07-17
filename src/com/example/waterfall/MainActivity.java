@@ -5,6 +5,7 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.os.Bundle;
+import android.view.ViewGroup;
 import bdad.AdContainer;
 
 import com.ds.bitmaputils.BitmapGetter;
@@ -16,9 +17,6 @@ import com.ds.widget.ScrollOverPanel;
 public class MainActivity extends Activity {
 
 	private static AdContainer sRootView;
-	
-	private ScrollOverPanel mPanel;
-	private ColumnListView mModel;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -44,10 +42,13 @@ public class MainActivity extends Activity {
 		} else {
 			showNonetDialog();
 		}
+		
+		if (sRootView != null && sRootView.getParent() == null) {
+			this.setContentView(sRootView);
+		}
+
 	}
 
-
-	
 	private void showNetWarningDialog() {
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);
 		builder.setTitle(R.string.not_wifi_waring_title);
@@ -83,14 +84,23 @@ public class MainActivity extends Activity {
 		builder.create().show();
 	}
 
+	@Override
+	protected void onPause() {
+		super.onPause();
+		
+		if (sRootView.getParent() != null) {
+			((ViewGroup) sRootView.getParent()).removeView(sRootView);
+		}
+	}
+
 	private void initView() {
 		if (sRootView == null) {
-			mModel = new ColumnListView(this);
-			mPanel = new ScrollOverPanel(this, mModel);
-			mModel.setDisplayingView(mPanel);
+			ColumnListView model = new ColumnListView(this);
+			ScrollOverPanel panel = new ScrollOverPanel(this, model);
+			model.setDisplayingView(panel);
 
 			sRootView = new AdContainer(this);
-			sRootView.setBottomView(mPanel);
+			sRootView.setBottomView(panel);
 
 			this.setContentView(sRootView);
 		}
